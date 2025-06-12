@@ -1,0 +1,67 @@
+[tool.poetry]
+name = "industrial-anodet-mlops"
+version = "0.1.0"
+description = "An MLOps pipeline for unsupervised industrial defect detection using PaDiM, ONNX, FastAPI, Docker, Azure DevOps, and MLflow."
+authors = ["Deep Knowledge <Deepp.Knowledge@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [{ include = "src" }]
+
+[tool.poetry.dependencies]
+python = "3.11.0"
+
+# Core ML and Computer Vision
+torch = "^2.2.0"                          # PyTorch - core deep learning framework
+torchvision = "^0.17.0"                  # Image transforms, pretrained models
+scikit-learn = "^1.4.0"                  # ML utilities: PCA, metrics, etc.
+numpy = "^1.26.0"                        # Numerical computing
+pandas = "^2.2.0"                        # Data manipulation and I/O
+opencv-python = "^4.9.0"                # Image I/O, resizing, drawing
+matplotlib = "^3.8.0"                    # Data visualization
+scipy = "^1.12.0"                        # Scientific computing (e.g., stats, distance)
+Pillow = "^10.2.0"                       # Image loading/saving
+
+# ONNX Support
+onnx = "^1.16.0"                         # Export models to ONNX format
+onnxruntime = "^1.18.0"                 # Run ONNX models locally
+
+# API and Inference Serving
+fastapi = "^0.111.0"                     # REST API for model serving
+uvicorn = { extras = ["standard"], version = "^0.30.0" }  # ASGI server for FastAPI
+
+# Logging and Monitoring
+python-dotenv = "^1.0.1"                 # Load secrets and configs from .env
+loguru = "^0.7.2"                        # Elegant logging
+opencensus-ext-azure = "^1.1.9"         # Send logs and metrics to Azure
+azure-monitor-opentelemetry = "^1.0.0b21"  # OpenTelemetry integration with Azure Monitor
+
+# Azure SDKs
+azure-identity = "^1.15.0"              # Authentication for Azure resources
+azure-ai-ml = "^1.16.0"                 # Azure ML SDK
+azure-keyvault-secrets = "^4.7.0"       # Access secrets securely from Azure Key Vault
+azureml-mlflow = "^1.56.0"              # MLflow tracking with Azure ML
+
+# MLflow for experiment tracking and ONNX model logging
+mlflow = "^2.13.0"                      # Track experiments, log and serve ONNX models
+
+# Drift Detection
+alibi-detect = "^0.12.0"               # Data and concept drift detection
+
+# Serialization and Utilities
+joblib = "^1.4.0"                      # Save/load models, PCA, etc.
+pyyaml = "^6.0.1"                      # Read/write YAML config files
+
+# Load Testing
+locust = "^2.24.0"                     # Simulate traffic to test FastAPI server
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.2.0"                      # Testing framework
+black = "^24.4.0"                      # Code formatter
+flake8 = "^7.0.0"                      # Python linter
+isort = "^5.13.2"                      # Sort imports
+pre-commit = "^3.7.0"                  # Git pre-commit hooks
+mypy = "^1.10.0"                       # Static type checker
+
+[build-system]
+requires = ["poetry-core>=1.9.0"]
+build-backend = "poetry.core.masonry.api"
