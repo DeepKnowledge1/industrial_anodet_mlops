@@ -2,6 +2,12 @@
 
 # 🏭 Industrial Defect Detection with MLOps
 
+<center>
+
+<img src="doc/banner.png" alt="Industrial Defect Detection with MLOps"  />
+
+</center>
+
 This repository contains a full **MLOps pipeline** for unsupervised **industrial defect detection** using **PaDiM** and a complete deployment and monitoring stack built with **FastAPI**, **Docker**, **Azure DevOps**, and **Azure Kubernetes Service (AKS)**. Environment and dependency management is handled via **Poetry**.
 
 ---
