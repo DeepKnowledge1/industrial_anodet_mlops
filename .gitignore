@@ -52,3 +52,5 @@ model_weights/*.h5
 .Trashes
 ehthumbs.db
 Thumbs.db
+src/model/anodet/
+padim_model.onnx

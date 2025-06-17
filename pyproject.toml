@@ -41,6 +41,7 @@ azure-ai-ml = "^1.16.0"                 # Azure ML SDK
 azure-keyvault-secrets = "^4.7.0"       # Access secrets securely from Azure Key Vault
 azureml-mlflow = "^1.56.0"              # MLflow tracking with Azure ML
 azure-mgmt-resource = "^23.2.0"
+azure-mgmt-storage = "^23.0.0"
 
 # MLflow for experiment tracking and ONNX model logging
 mlflow = "^2.13.0"                      # Track experiments, log and serve ONNX models

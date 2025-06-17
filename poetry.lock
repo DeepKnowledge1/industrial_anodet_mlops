@@ -283,6 +283,24 @@ isodate = ">=0.6.1"
 typing-extensions = ">=4.6.0"
 
 [[package]]
+name = "azure-mgmt-storage"
+version = "23.0.0"
+description = "Microsoft Azure Storage Management Client Library for Python"
+optional = false
+python-versions = ">=3.9"
+groups = ["main"]
+files = [
+    {file = "azure_mgmt_storage-23.0.0-py3-none-any.whl", hash = "sha256:2775e98bf84ebe4af193154accd789855bf5f2169b64b6966a2da585badc6470"},
+    {file = "azure_mgmt_storage-23.0.0.tar.gz", hash = "sha256:1c5954d59bddcb979d05bc49e431716a6e2b2f756909b96ba7c43261072afcbf"},
+]
+
+[package.dependencies]
+azure-common = ">=1.1"
+azure-mgmt-core = ">=1.5.0"
+isodate = ">=0.6.1"
+typing-extensions = ">=4.6.0"
+
+[[package]]
 name = "azure-monitor-opentelemetry"
 version = "1.6.10"
 description = "Microsoft Azure Monitor Opentelemetry Distro Client Library for Python"
@@ -6490,4 +6508,4 @@ testing = ["coverage[toml]", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.1"
 python-versions = "3.11.0"
-content-hash = "b4cbe61e55bc8761ca8f06499d9e4c872d01319ce51fe96001c295d896600bd7"
+content-hash = "bcb233156f67a920676e0bde2b6018efbdc0e0b7a50c488bc69e87368dd2a748"
