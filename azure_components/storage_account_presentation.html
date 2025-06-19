@@ -149,9 +149,11 @@ az storage account create `
   --resource-group rg-ml-industrial-dev `
   --location eastus `
   --sku Standard_LRS `
-  --kind BlobStorage `
+  --kind StorageV2 `
   --access-tier Hot
   --tags project=industrial environment=dev department=ml
+
+
 
 # Show Account Info
 az storage account show --name industrialdevstorage --resource-group rg-ml-industrial-dev
