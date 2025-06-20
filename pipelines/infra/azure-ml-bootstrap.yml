@@ -27,8 +27,8 @@ stages:
         scriptLocation: inlineScript
         inlineScript: >
           az group create
-          --name $$(RESOURCE_GROUP)
-          --LOCATION $$(LOCATION)
+          --name $(RESOURCE_GROUP)
+          --location $(LOCATION)
 
     - task: AzureCLI@2
       displayName: 'Step 2 - Create Azure ML Workspace'
@@ -38,12 +38,12 @@ stages:
         scriptLocation: inlineScript
         inlineScript: >
           az ml workspace show
-          --name $$(WORKSPACE)
-          --resource-group $$(RESOURCE_GROUP)
+          --name $(WORKSPACE)
+          --resource-group $(RESOURCE_GROUP)
           || az ml workspace create
-          --name $$(WORKSPACE)
-          --resource-group $$(RESOURCE_GROUP)
-          --LOCATION $$(LOCATION)
+          --name $(WORKSPACE)
+          --resource-group $(RESOURCE_GROUP)
+          --location $(LOCATION)
 
     - task: AzureCLI@2
       displayName: 'Step 3 - Create Azure ML Compute Cluster'
@@ -53,18 +53,18 @@ stages:
         scriptLocation: inlineScript
         inlineScript: >
           az ml compute show
-          --name $$(COMPUTE_NAME)
-          --workspace-name $$(WORKSPACE)
-          --resource-group $$(RESOURCE_GROUP)
+          --name $(COMPUTE_NAME)
+          --workspace-name $(WORKSPACE)
+          --resource-group $(RESOURCE_GROUP)
           || az ml compute create
-          --name $$(COMPUTE_NAME)
+          --name $(COMPUTE_NAME)
           --type AmlCompute
           --min-instances 0
           --max-instances 2
           --size Standard_DS3_v2
           --idle-time-before-scale-down 20
-          --resource-group $$(RESOURCE_GROUP)
-          --workspace-name $$(WORKSPACE)
+          --resource-group $(RESOURCE_GROUP)
+          --workspace-name $(WORKSPACE)
               
 
     - task: AzureCLI@2
@@ -74,10 +74,10 @@ stages:
         scriptType: ps
         scriptLocation: inlineScript
         inlineScript: >
-          az acr show --name $$(ACR_NAME) --resource-group $$(RESOURCE_GROUP)
+          az acr show --name $(ACR_NAME) --resource-group $(RESOURCE_GROUP)
           || az acr create
-          --name $$(ACR_NAME)
-          --resource-group $$(RESOURCE_GROUP)
+          --name $(ACR_NAME)
+          --resource-group $(RESOURCE_GROUP)
           --sku Basic
           --admin-enabled true
 
@@ -88,10 +88,10 @@ stages:
         scriptType: ps
         scriptLocation: inlineScript
         inlineScript: >
-          az aks show --name $$(AKS_NAME) --resource-group $$(RESOURCE_GROUP)
+          az aks show --name $(AKS_NAME) --resource-group $(RESOURCE_GROUP)
           || az aks create
-          --resource-group $$(RESOURCE_GROUP)
-          --name $$(AKS_NAME)
+          --resource-group $(RESOURCE_GROUP)
+          --name $(AKS_NAME)
           --enable-cluster-autoscaler
           --min-count 0
           --max-count 2
@@ -108,9 +108,9 @@ stages:
         scriptLocation: inlineScript
         inlineScript: >
           az aks update
-          --name $$(AKS_NAME)
-          --resource-group $$(RESOURCE_GROUP)
-          --attach-acr $$(ACR_NAME)
+          --name $(AKS_NAME)
+          --resource-group $(RESOURCE_GROUP)
+          --attach-acr $(ACR_NAME)
 
     - task: AzureCLI@2
       displayName: 'Step 7 - Install ML CLI Extension'
@@ -128,12 +128,12 @@ stages:
         scriptType: ps
         scriptLocation: inlineScript
         inlineScript: >
-          AKS_ID=$$(az aks show --name $(AKS_NAME) --resource-group $$(RESOURCE_GROUP) --query id -o tsv)
+          AKS_ID=$(az aks show --name $(AKS_NAME) --resource-group $(RESOURCE_GROUP) --query id -o tsv)
           az ml compute attach
           --type aks
-          --name $$(aksCOMPUTE_NAME)
-          --resource-group $$(RESOURCE_GROUP)
-          --workspace-name $$(WORKSPACE)
+          --name $(aksCOMPUTE_NAME)
+          --resource-group $(RESOURCE_GROUP)
+          --workspace-name $(WORKSPACE)
           --resource-id $AKS_ID
           --no-wait
 
@@ -144,16 +144,16 @@ stages:
         scriptType: ps
         scriptLocation: inlineScript
         inlineScript: >
-          EXIST=$$(az ml data list --workspace-name $(WORKSPACE) --resource-group $$(RESOURCE_GROUP)
-          --query "[?name=='$$(DATASET_NAME)'] | length(@)" -o tsv)
+          EXIST=$(az ml data list --workspace-name $(WORKSPACE) --resource-group $(RESOURCE_GROUP)
+          --query "[?name=='$(DATASET_NAME)'] | length(@)" -o tsv)
           
           if [[ "$EXIST" == "0" ]]; then
           az ml data create
-          --name $$(DATASET_NAME)
+          --name $(DATASET_NAME)
           --type uri_folder
-          --path $$(datasetPath)
-          --resource-group $$(RESOURCE_GROUP)
-          --workspace-name $$(WORKSPACE)
+          --path $(datasetPath)
+          --resource-group $(RESOURCE_GROUP)
+          --workspace-name $(WORKSPACE)
           else
           echo "✅ Dataset already exists. Skipping upload."
           fi
