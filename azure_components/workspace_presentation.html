@@ -183,6 +183,40 @@ az ml workspace create `
 
 
 
+## Load images to the dataaset
+az ml data create `
+  --name anomaly-images `
+  --type uri_folder `
+  --path ./bottle/train/good `
+  --description "Training images for anomaly detection" `
+  --workspace-name aml-industrial-ws `
+  --resource-group rg-ml-industrial-dev
+
+
+
+
+  DATA_NAME="anomaly-images"
+DATA_VERSION="1"
+
+if az ml data show \
+  --name $DATA_NAME \
+  --version $DATA_VERSION \
+  --workspace-name aml-industrial-ws \
+  --resource-group rg-ml-industrial-dev &>/dev/null; then
+    echo "✅ Data asset $DATA_NAME:$DATA_VERSION already exists. Skipping upload."
+else
+    echo "⬆️ Uploading dataset..."
+    az ml data create \
+      --name $DATA_NAME \
+      --version $DATA_VERSION \
+      --type uri_folder \
+      --path ./data \
+      --workspace-name aml-industrial-ws \
+      --resource-group rg-ml-industrial-dev
+fi
+
+
+
 
 # Advanced Workspace Creation
 az ml workspace create `
