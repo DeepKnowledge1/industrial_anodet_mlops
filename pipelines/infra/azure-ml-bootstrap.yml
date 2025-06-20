@@ -6,27 +6,6 @@ trigger:
 variables:
   - group: mlops-azure-components  # Azure connection + secrets
 
-  - name: RESOURCE_GROUP
-    value: my-mlops-rg
-  - name: WORKSPACE
-    value: my-mlops-ws
-  - name: LOCATION
-    value: east
-
-  - name: COMPUTE_NAME
-    value: padim-cpu-cluster
-
-  - name: DATASET_NAME-da
-    value: trainingta
-  - name: datasetPath
-    value: infra/training-data/
-
-  - name: ACR_NAME
-    value: mymlopsacr
-  - name: AKS_NAME
-    value: my-mlops-aks
-  - name: aksCOMPUTE_NAME
-    value: mlops-aks
 
 pool:
   name:Default
