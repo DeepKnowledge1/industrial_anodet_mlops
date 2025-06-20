@@ -3,12 +3,13 @@ trigger:
     include:
       - infra/
 
+
+
+pool:  
+  name: Default
+
 variables:
   - group: mlops-azure-components  # Azure connection + secrets
-
-
-pool:
-  name:Default
 
 stages:
 - stage: BootstrapAzureMLInfra
