@@ -25,10 +25,10 @@ stages:
         azureSubscription: mlops_anomaly_detection # service connection
         scriptType: ps
         scriptLocation: inlineScript
-        inlineScript: |
-          az group create  `
-        --name $(RESOURCE_GROUP)  `
-        --LOCATION $(LOCATION)
+        inlineScript: >
+          az group create
+          --name $$(RESOURCE_GROUP)
+          --LOCATION $$(LOCATION)
 
     - task: AzureCLI@2
       displayName: 'Step 2 - Create Azure ML Workspace'
@@ -36,14 +36,14 @@ stages:
         azureSubscription: mlops_anomaly_detection # service connection
         scriptType: ps
         scriptLocation: inlineScript
-        inlineScript: |
-          az ml workspace show  `
-        --name $(WORKSPACE)  `
-        --resource-group $(RESOURCE_GROUP)  `
-        || az ml workspace create  `
-        --name $(WORKSPACE)  `
-        --resource-group $(RESOURCE_GROUP)  `
-        --LOCATION $(LOCATION)
+        inlineScript: >
+          az ml workspace show
+          --name $$(WORKSPACE)
+          --resource-group $$(RESOURCE_GROUP)
+          || az ml workspace create
+          --name $$(WORKSPACE)
+          --resource-group $$(RESOURCE_GROUP)
+          --LOCATION $$(LOCATION)
 
     - task: AzureCLI@2
       displayName: 'Step 3 - Create Azure ML Compute Cluster'
@@ -51,20 +51,20 @@ stages:
         azureSubscription: mlops_anomaly_detection # service connection
         scriptType: ps
         scriptLocation: inlineScript
-        inlineScript: |
-          az ml compute show  `
-        --name $(COMPUTE_NAME)  `
-        --workspace-name $(WORKSPACE)  `
-        --resource-group $(RESOURCE_GROUP)  `
-        || az ml compute create  `
-        --name $(COMPUTE_NAME)  `
-        --type AmlCompute  `
-        --min-instances 0  `
-        --max-instances 2  `
-        --size Standard_DS3_v2  `
-        --idle-time-before-scale-down 20  `
-        --resource-group $(RESOURCE_GROUP)  `
-        --workspace-name $(WORKSPACE)
+        inlineScript: >
+          az ml compute show
+          --name $$(COMPUTE_NAME)
+          --workspace-name $$(WORKSPACE)
+          --resource-group $$(RESOURCE_GROUP)
+          || az ml compute create
+          --name $$(COMPUTE_NAME)
+          --type AmlCompute
+          --min-instances 0
+          --max-instances 2
+          --size Standard_DS3_v2
+          --idle-time-before-scale-down 20
+          --resource-group $$(RESOURCE_GROUP)
+          --workspace-name $$(WORKSPACE)
               
 
     - task: AzureCLI@2
@@ -73,13 +73,13 @@ stages:
         azureSubscription: mlops_anomaly_detection # service connection
         scriptType: ps
         scriptLocation: inlineScript
-        inlineScript: |
-          az acr show --name $(ACR_NAME) --resource-group $(RESOURCE_GROUP)  `
-        || az acr create  `
-        --name $(ACR_NAME)  `
-        --resource-group $(RESOURCE_GROUP)  `
-        --sku Basic  `
-        --admin-enabled true
+        inlineScript: >
+          az acr show --name $$(ACR_NAME) --resource-group $$(RESOURCE_GROUP)
+          || az acr create
+          --name $$(ACR_NAME)
+          --resource-group $$(RESOURCE_GROUP)
+          --sku Basic
+          --admin-enabled true
 
     - task: AzureCLI@2
       displayName: 'Step 5 - Create AKS with Autoscaler'
@@ -87,18 +87,18 @@ stages:
         azureSubscription: mlops_anomaly_detection # service connection
         scriptType: ps
         scriptLocation: inlineScript
-        inlineScript: |
-          az aks show --name $(AKS_NAME) --resource-group $(RESOURCE_GROUP)  `
-        || az aks create  `
-        --resource-group $(RESOURCE_GROUP)  `
-        --name $(AKS_NAME)  `
-        --enable-cluster-autoscaler  `
-        --min-count 0  `
-        --max-count 2  `
-        --node-vm-size Standard_DS3_v2  `
-        --enable-addons monitoring  `
-        --enable-managed-identity  `
-        --generate-ssh-keys
+        inlineScript: >
+          az aks show --name $$(AKS_NAME) --resource-group $$(RESOURCE_GROUP)
+          || az aks create
+          --resource-group $$(RESOURCE_GROUP)
+          --name $$(AKS_NAME)
+          --enable-cluster-autoscaler
+          --min-count 0
+          --max-count 2
+          --node-vm-size Standard_DS3_v2
+          --enable-addons monitoring
+          --enable-managed-identity
+          --generate-ssh-keys
 
     - task: AzureCLI@2
       displayName: 'Step 6 - Attach ACR to AKS'
@@ -106,11 +106,11 @@ stages:
         azureSubscription: mlops_anomaly_detection # service connection
         scriptType: ps
         scriptLocation: inlineScript
-        inlineScript: |
-          az aks update  `
-        --name $(AKS_NAME)  `
-        --resource-group $(RESOURCE_GROUP)  `
-        --attach-acr $(ACR_NAME)
+        inlineScript: >
+          az aks update
+          --name $$(AKS_NAME)
+          --resource-group $$(RESOURCE_GROUP)
+          --attach-acr $$(ACR_NAME)
 
     - task: AzureCLI@2
       displayName: 'Step 7 - Install ML CLI Extension'
@@ -118,7 +118,7 @@ stages:
         azureSubscription: mlops_anomaly_detection # service connection
         scriptType: ps
         scriptLocation: inlineScript
-        inlineScript: |
+        inlineScript: >
           az extension add -n ml || az extension update -n ml
 
     - task: AzureCLI@2
@@ -127,15 +127,15 @@ stages:
         azureSubscription: mlops_anomaly_detection # service connection
         scriptType: ps
         scriptLocation: inlineScript
-        inlineScript: |
-          AKS_ID=$(az aks show --name $(AKS_NAME) --resource-group $(RESOURCE_GROUP) --query id -o tsv)
-          az ml compute attach  `
-        --type aks  `
-        --name $(aksCOMPUTE_NAME)  `
-        --resource-group $(RESOURCE_GROUP)  `
-        --workspace-name $(WORKSPACE)  `
-        --resource-id $AKS_ID  `
-        --no-wait
+        inlineScript: >
+          AKS_ID=$$(az aks show --name $(AKS_NAME) --resource-group $$(RESOURCE_GROUP) --query id -o tsv)
+          az ml compute attach
+          --type aks
+          --name $$(aksCOMPUTE_NAME)
+          --resource-group $$(RESOURCE_GROUP)
+          --workspace-name $$(WORKSPACE)
+          --resource-id $AKS_ID
+          --no-wait
 
     - task: AzureCLI@2
       displayName: 'Step 9 - Register Dataset (only if missing)'
@@ -143,17 +143,17 @@ stages:
         azureSubscription: mlops_anomaly_detection # service connection
         scriptType: ps
         scriptLocation: inlineScript
-        inlineScript: |
-          EXIST=$(az ml data list --workspace-name $(WORKSPACE) --resource-group $(RESOURCE_GROUP)  `
-        --query "[?name=='$(DATASET_NAME)'] | length(@)" -o tsv)
-
+        inlineScript: >
+          EXIST=$$(az ml data list --workspace-name $(WORKSPACE) --resource-group $$(RESOURCE_GROUP)
+          --query "[?name=='$$(DATASET_NAME)'] | length(@)" -o tsv)
+          
           if [[ "$EXIST" == "0" ]]; then
-            az ml data create  `
-        --name $(DATASET_NAME)  `
-        --type uri_folder  `
-        --path $(datasetPath)  `
-        --resource-group $(RESOURCE_GROUP)  `
-        --workspace-name $(WORKSPACE)
+          az ml data create
+          --name $$(DATASET_NAME)
+          --type uri_folder
+          --path $$(datasetPath)
+          --resource-group $$(RESOURCE_GROUP)
+          --workspace-name $$(WORKSPACE)
           else
-            echo "✅ Dataset already exists. Skipping upload."
+          echo "✅ Dataset already exists. Skipping upload."
           fi
