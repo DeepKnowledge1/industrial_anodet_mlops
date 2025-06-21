@@ -1,4 +1,4 @@
-name: industrial-anodet-mlops
+name: animavision-mlops
 channels:
   - defaults
   - conda-forge
