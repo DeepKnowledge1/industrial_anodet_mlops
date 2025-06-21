@@ -54,7 +54,7 @@ stages:
               --name $(ACR_NAME) `
               --sku Basic `
               --location $(LOCATION) `
-              --admin-enabled false `
+              --admin-enabled false
 
 
 
