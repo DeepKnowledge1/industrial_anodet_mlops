@@ -121,7 +121,7 @@ stages:
               --extension-type Microsoft.AzureML.Kubernetes `
               --cluster-type managedClusters `
               --cluster-name $(AKS_NAME) `
-              --resource-group $(RESOURCE_GROUP) `              
+              --resource-group $(RESOURCE_GROUP)
 
 
     - task: AzureCLI@2
