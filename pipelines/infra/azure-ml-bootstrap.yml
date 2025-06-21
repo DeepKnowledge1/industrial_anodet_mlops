@@ -50,11 +50,12 @@ stages:
         inlineScript: |
 
           az acr create `
-              --resource-group $RESOURCE_GROUP `
-              --name $ACR_NAME `
+              --resource-group $(RESOURCE_GROUP) `
+              --name $(ACR_NAME) `
               --sku Basic `
-              --location $LOCATION `
-              --admin-enabled true `
+              --location $(LOCATION) `
+              --admin-enabled false `
+              --public-network-enabled false
 
 
     - task: AzureCLI@2
@@ -109,7 +110,7 @@ stages:
             --workspace-name $(WORKSPACE_NAME) `
             --type Kubernetes `
             --name $(ML_AKS_NAME) `
-            --resource-id --resource-id $(az aks show --name $AKS_NAME --resource-group $RESOURCE_GROUP --query id -o tsv) `
+            --resource-id $(az aks show --name $AKS_NAME --resource-group $RESOURCE_GROUP --query id -o tsv) `
             --identity-type SystemAssigned `
             --namespace azureml
 
@@ -125,6 +126,19 @@ stages:
             --name anomaly-images `
             --type uri_folder `
             --path $env:DATA_ANO_DIR `
-            --description "Training images for anomaly detection" `
+            --description "Training + test + ground truth images for anomaly detection" `
+            --workspace-name $(WORKSPACE) `
+            --resource-group $(RESOURCE_GROUP)
+
+
+    - task: AzureCLI@2
+      displayName: 'Step 8 - Register Training Environment'
+      inputs:
+        azureSubscription: mlops_anomaly_detection
+        scriptType: ps
+        scriptLocation: inlineScript
+        inlineScript: |
+          az ml environment create `
+            --file "$(Build.SourcesDirectory)/deployment/environment.yml" `
             --workspace-name $(WORKSPACE) `
             --resource-group $(RESOURCE_GROUP)
