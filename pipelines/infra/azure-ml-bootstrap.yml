@@ -110,7 +110,7 @@ stages:
 
 
     - task: AzureCLI@2
-      displayName: 'Step 5 - Create Azure ML Compute Cluster'
+      displayName: 'Step 5 - Create k8s-extension'
       inputs:
         azureSubscription: mlops_anomaly_detection
         scriptType: ps
@@ -122,8 +122,6 @@ stages:
               --cluster-type managedClusters `
               --cluster-name $(AKS_NAME) `
               --resource-group $(RESOURCE_GROUP) `              
-              --scope cluster `
-              --release-train stable
 
 
     - task: AzureCLI@2
