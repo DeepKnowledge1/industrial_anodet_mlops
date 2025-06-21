@@ -41,20 +41,20 @@ stages:
     #         --resource-group $(RESOURCE_GROUP) `
     #         --location $(LOCATION)
 
-    - task: AzureCLI@2
-      displayName: 'Step 3 - Create Azure Container Registry (ACR)'
-      inputs:
-        azureSubscription: mlops_anomaly_detection
-        scriptType: ps
-        scriptLocation: inlineScript
-        inlineScript: |
+    # - task: AzureCLI@2
+    #   displayName: 'Step 3 - Create Azure Container Registry (ACR)'
+    #   inputs:
+    #     azureSubscription: mlops_anomaly_detection
+    #     scriptType: ps
+    #     scriptLocation: inlineScript
+    #     inlineScript: |
 
-          az acr create `
-              --resource-group $(RESOURCE_GROUP) `
-              --name $(ACR_NAME) `
-              --sku Basic `
-              --location $(LOCATION) `
-              --admin-enabled false
+    #       az acr create `
+    #           --resource-group $(RESOURCE_GROUP) `
+    #           --name $(ACR_NAME) `
+    #           --sku Basic `
+    #           --location $(LOCATION) `
+    #           --admin-enabled false
 
 
 
@@ -69,7 +69,7 @@ stages:
 
           az aks create `
             --resource-group $RESOURCE_GROUP `
-            --name $AKS_NAME `
+            --name $(AKS_NAME) `
             --enable-cluster-autoscaler `
             --min-count 0 `
             --max-count 2 `
