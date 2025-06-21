@@ -90,22 +90,22 @@ stages:
     #         --load-balancer-idle-timeout 4 `
     #         --no-ssh-key
 
-    - task: AzureCLI@2
-      displayName: 'Step 5 - Create Azure ML Compute Cluster'
-      inputs:
-        azureSubscription: mlops_anomaly_detection
-        scriptType: ps
-        scriptLocation: inlineScript
-        inlineScript: |
-          az ml compute create `
-            --name $(COMPUTE_NAME) `
-            --type AmlCompute `
-            --size Standard_DS2_v2 `
-            --min-instances 0 `
-            --max-instances 1 `
-            --idle-time-before-scale-down 120 `
-            --resource-group $(RESOURCE_GROUP) `
-            --workspace-name $(WORKSPACE)
+    # - task: AzureCLI@2
+    #   displayName: 'Step 5 - Create Azure ML Compute Cluster'
+    #   inputs:
+    #     azureSubscription: mlops_anomaly_detection
+    #     scriptType: ps
+    #     scriptLocation: inlineScript
+    #     inlineScript: |
+    #       az ml compute create `
+    #         --name $(COMPUTE_NAME) `
+    #         --type AmlCompute `
+    #         --size Standard_DS2_v2 `
+    #         --min-instances 0 `
+    #         --max-instances 1 `
+    #         --idle-time-before-scale-down 120 `
+    #         --resource-group $(RESOURCE_GROUP) `
+    #         --workspace-name $(WORKSPACE)
 
     - task: AzureCLI@2
       displayName: 'Step 6 - Attach AKS to Azure ML Workspace'
@@ -117,7 +117,7 @@ stages:
 
           az ml compute attach `
             --resource-group $(RESOURCE_GROUP) `
-            --workspace-name $(WORKSPACE_NAME) `
+            --workspace-name $(WORKSPACE) `
             --type Kubernetes `
             --name $(ML_AKS_NAME) `
             --resource-id $(az aks show --name $AKS_NAME --resource-group $RESOURCE_GROUP --query id -o tsv) `
