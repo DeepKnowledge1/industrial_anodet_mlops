@@ -122,7 +122,7 @@ stages:
               --cluster-type managedClusters `
               --cluster-name $(AKS_NAME) `
               --resource-group $(RESOURCE_GROUP) `
-              --configuration-settings enableInference=true allowInsecureConnections=true
+              --configuration-settings enableInference=true allowInsecureConnections=true inferenceRouterServiceType=LoadBalancer
 
 
     - task: AzureCLI@2
