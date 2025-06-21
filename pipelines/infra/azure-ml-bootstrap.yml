@@ -104,7 +104,6 @@ stages:
             --min-instances 0 `
             --max-instances 1 `
             --idle-time-before-scale-down 120 `
-
             --resource-group $(RESOURCE_GROUP) `
             --workspace-name $(WORKSPACE)
 
