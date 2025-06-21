@@ -122,7 +122,6 @@ stages:
               --cluster-type managedClusters `
               --cluster-name $(AKS_NAME) `
               --resource-group $(RESOURCE_GROUP) `              
-              --auto-upgrade-minor-version true `
               --scope cluster `
               --release-train stable
 
