@@ -120,7 +120,7 @@ stages:
             --workspace-name $(WORKSPACE) `
             --type Kubernetes `
             --name $(ML_AKS_NAME) `
-            --resource-id $(az aks show --name $AKS_NAME --resource-group $RESOURCE_GROUP --query id -o tsv) `
+            --resource-id $(az aks show --name $(AKS_NAME) --resource-group $(RESOURCE_GROUP) --query id -o tsv) `
             --identity-type SystemAssigned `
             --namespace azureml
 
