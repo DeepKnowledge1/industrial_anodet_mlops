@@ -1,15 +1,14 @@
+
 trigger:
   paths:
     include:
       - infra/
 
 pool:
-  name: Default  # or use 'vmImage: "windows-latest"' if you're using a Microsoft-hosted agent
+  name: Default
 
 variables:
-  - group: mlops-azure-components  # Azure Key Vault or variable group
-  # Make sure the following variables are defined in your group or pipeline
-  # RESOURCE_GROUP, LOCATION, WORKSPACE, ACR_NAME, AKS_NAME, COMPUTE_NAME, DATASTORE_NAME
+  - group: mlops-azure-components
 
 stages:
 - stage: BootstrapAzureMLInfra
@@ -37,20 +36,21 @@ stages:
         scriptType: ps
         scriptLocation: inlineScript
         inlineScript: |
-          az ml workspace show `
-            --name $(WORKSPACE) `
-            --resource-group $(RESOURCE_GROUP) `
-            --only-show-errors `
-            --output none 2>$null
-
-          if ($LASTEXITCODE -ne 0) {
-            Write-Host "Creating Azure ML Workspace..."
+          $ErrorActionPreference = "Continue"
+          try {
+            az ml workspace show `
+              --name $(WORKSPACE) `
+              --resource-group $(RESOURCE_GROUP) `
+              --output none
+            $exists = $true
+          } catch {
+            $exists = $false
+          }
+          if (-not $exists) {
             az ml workspace create `
               --name $(WORKSPACE) `
               --resource-group $(RESOURCE_GROUP) `
               --location $(LOCATION)
-          } else {
-            Write-Host "Azure ML Workspace already exists."
           }
 
     - task: AzureCLI@2
@@ -60,34 +60,42 @@ stages:
         scriptType: ps
         scriptLocation: inlineScript
         inlineScript: |
-          az acr show --name $(ACR_NAME) --resource-group $(RESOURCE_GROUP) --output none 2>$null
-          if ($LASTEXITCODE -ne 0) {
+          $ErrorActionPreference = "Continue"
+          try {
+            az acr show --name $(ACR_NAME) --resource-group $(RESOURCE_GROUP) --output none
+            $exists = $true
+          } catch {
+            $exists = $false
+          }
+          if (-not $exists) {
             az acr create `
               --name $(ACR_NAME) `
               --resource-group $(RESOURCE_GROUP) `
               --sku Basic `
               --location $(LOCATION)
-          } else {
-            Write-Host "ACR already exists."
           }
 
     - task: AzureCLI@2
-      displayName: 'Step 4 - Create AKS Cluster (for inference)'
+      displayName: 'Step 4 - Create AKS Cluster (if not exists)'
       inputs:
         azureSubscription: mlops_anomaly_detection
         scriptType: ps
         scriptLocation: inlineScript
         inlineScript: |
-          az aks show --name $(AKS_NAME) --resource-group $(RESOURCE_GROUP) --output none 2>$null
-          if ($LASTEXITCODE -ne 0) {
+          $ErrorActionPreference = "Continue"
+          try {
+            az aks show --name $(AKS_NAME) --resource-group $(RESOURCE_GROUP) --output none
+            $exists = $true
+          } catch {
+            $exists = $false
+          }
+          if (-not $exists) {
             az aks create `
               --name $(AKS_NAME) `
               --resource-group $(RESOURCE_GROUP) `
               --node-count 1 `
               --enable-managed-identity `
               --generate-ssh-keys
-          } else {
-            Write-Host "AKS already exists."
           }
 
     - task: AzureCLI@2
@@ -97,13 +105,18 @@ stages:
         scriptType: ps
         scriptLocation: inlineScript
         inlineScript: |
-          az ml compute show `
-            --name $(COMPUTE_NAME) `
-            --workspace-name $(WORKSPACE) `
-            --resource-group $(RESOURCE_GROUP) `
-            --output none 2>$null
-
-          if ($LASTEXITCODE -ne 0) {
+          $ErrorActionPreference = "Continue"
+          try {
+            az ml compute show `
+              --name $(COMPUTE_NAME) `
+              --workspace-name $(WORKSPACE) `
+              --resource-group $(RESOURCE_GROUP) `
+              --output none
+            $exists = $true
+          } catch {
+            $exists = $false
+          }
+          if (-not $exists) {
             az ml compute create `
               --name $(COMPUTE_NAME) `
               --size Standard_DS2_v2 `
@@ -112,8 +125,6 @@ stages:
               --max-instances 2 `
               --workspace-name $(WORKSPACE) `
               --resource-group $(RESOURCE_GROUP)
-          } else {
-            Write-Host "Compute cluster already exists."
           }
 
     - task: AzureCLI@2
@@ -123,21 +134,23 @@ stages:
         scriptType: ps
         scriptLocation: inlineScript
         inlineScript: |
-          $datastore = az ml datastore show `
-            --name $(DATASTORE_NAME) `
-            --workspace-name $(WORKSPACE) `
-            --resource-group $(RESOURCE_GROUP) `
-            --only-show-errors `
-            --output none 2>$null
-
-          if ($LASTEXITCODE -ne 0) {
+          $ErrorActionPreference = "Continue"
+          try {
+            az ml datastore show `
+              --name $(DATASTORE_NAME) `
+              --workspace-name $(WORKSPACE) `
+              --resource-group $(RESOURCE_GROUP) `
+              --output none
+            $exists = $true
+          } catch {
+            $exists = $false
+          }
+          if (-not $exists) {
             az ml datastore register-azure-blob `
               --name $(DATASTORE_NAME) `
               --workspace-name $(WORKSPACE) `
               --resource-group $(RESOURCE_GROUP) `
               --account-name "<your-storage-account-name>" `
               --container-name "<your-container-name>" `
-              --credential "account_key"
-          } else {
-            Write-Host "Datastore already exists."
+              --credential account_key
           }
