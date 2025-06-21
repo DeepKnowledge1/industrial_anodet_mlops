@@ -30,28 +30,16 @@ stages:
             --location $(LOCATION)
 
     - task: AzureCLI@2
-      displayName: 'Step 2 - Create Azure ML Workspace (if not exists)'
+      displayName: 'Step 2 - Create Azure ML Workspace'
       inputs:
         azureSubscription: mlops_anomaly_detection
         scriptType: ps
         scriptLocation: inlineScript
         inlineScript: |
-          $ErrorActionPreference = "Continue"
-          try {
-            az ml workspace show `
-              --name $(WORKSPACE) `
-              --resource-group $(RESOURCE_GROUP) `
-              --output none
-            $exists = $true
-          } catch {
-            $exists = $false
-          }
-          if (-not $exists) {
-            az ml workspace create `
-              --name $(WORKSPACE) `
-              --resource-group $(RESOURCE_GROUP) `
-              --location $(LOCATION)
-          }
+          az ml workspace create `
+            --name $(WORKSPACE) `
+            --resource-group $(RESOURCE_GROUP) `
+            --location $(LOCATION)
 
     - task: AzureCLI@2
       displayName: 'Step 3 - Create Azure Container Registry (ACR)'
@@ -60,43 +48,25 @@ stages:
         scriptType: ps
         scriptLocation: inlineScript
         inlineScript: |
-          $ErrorActionPreference = "Continue"
-          try {
-            az acr show --name $(ACR_NAME) --resource-group $(RESOURCE_GROUP) --output none
-            $exists = $true
-          } catch {
-            $exists = $false
-          }
-          if (-not $exists) {
-            az acr create `
-              --name $(ACR_NAME) `
-              --resource-group $(RESOURCE_GROUP) `
-              --sku Basic `
-              --location $(LOCATION)
-          }
+          az acr create `
+            --name $(ACR_NAME) `
+            --resource-group $(RESOURCE_GROUP) `
+            --sku Basic `
+            --location $(LOCATION)
 
     - task: AzureCLI@2
-      displayName: 'Step 4 - Create AKS Cluster (if not exists)'
+      displayName: 'Step 4 - Create AKS Cluster'
       inputs:
         azureSubscription: mlops_anomaly_detection
         scriptType: ps
         scriptLocation: inlineScript
         inlineScript: |
-          $ErrorActionPreference = "Continue"
-          try {
-            az aks show --name $(AKS_NAME) --resource-group $(RESOURCE_GROUP) --output none
-            $exists = $true
-          } catch {
-            $exists = $false
-          }
-          if (-not $exists) {
-            az aks create `
-              --name $(AKS_NAME) `
-              --resource-group $(RESOURCE_GROUP) `
-              --node-count 1 `
-              --enable-managed-identity `
-              --generate-ssh-keys
-          }
+          az aks create `
+            --name $(AKS_NAME) `
+            --resource-group $(RESOURCE_GROUP) `
+            --node-count 1 `
+            --enable-managed-identity `
+            --generate-ssh-keys
 
     - task: AzureCLI@2
       displayName: 'Step 5 - Create Azure ML Compute Cluster'
@@ -105,52 +75,26 @@ stages:
         scriptType: ps
         scriptLocation: inlineScript
         inlineScript: |
-          $ErrorActionPreference = "Continue"
-          try {
-            az ml compute show `
-              --name $(COMPUTE_NAME) `
-              --workspace-name $(WORKSPACE) `
-              --resource-group $(RESOURCE_GROUP) `
-              --output none
-            $exists = $true
-          } catch {
-            $exists = $false
-          }
-          if (-not $exists) {
-            az ml compute create `
-              --name $(COMPUTE_NAME) `
-              --size Standard_DS2_v2 `
-              --type amlcompute `
-              --min-instances 0 `
-              --max-instances 2 `
-              --workspace-name $(WORKSPACE) `
-              --resource-group $(RESOURCE_GROUP)
-          }
+          az ml compute create `
+            --name $(COMPUTE_NAME) `
+            --size Standard_DS2_v2 `
+            --type amlcompute `
+            --min-instances 0 `
+            --max-instances 2 `
+            --workspace-name $(WORKSPACE) `
+            --resource-group $(RESOURCE_GROUP)
 
     - task: AzureCLI@2
-      displayName: 'Step 6 - Register Azure ML Datastore (optional)'
+      displayName: 'Step 6 - Upload Training Images to ML Dataset'
       inputs:
         azureSubscription: mlops_anomaly_detection
         scriptType: ps
         scriptLocation: inlineScript
         inlineScript: |
-          $ErrorActionPreference = "Continue"
-          try {
-            az ml datastore show `
-              --name $(DATASTORE_NAME) `
-              --workspace-name $(WORKSPACE) `
-              --resource-group $(RESOURCE_GROUP) `
-              --output none
-            $exists = $true
-          } catch {
-            $exists = $false
-          }
-          if (-not $exists) {
-            az ml datastore register-azure-blob `
-              --name $(DATASTORE_NAME) `
-              --workspace-name $(WORKSPACE) `
-              --resource-group $(RESOURCE_GROUP) `
-              --account-name "<your-storage-account-name>" `
-              --container-name "<your-container-name>" `
-              --credential account_key
-          }
+          az ml data create `
+            --name anomaly-images `
+            --type uri_folder `
+            --path ./bottle/train/good `
+            --description "Training images for anomaly detection" `
+            --workspace-name $(WORKSPACE) `
+            --resource-group $(RESOURCE_GROUP)
