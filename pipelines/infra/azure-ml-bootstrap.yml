@@ -68,7 +68,7 @@ stages:
         inlineScript: |
 
           az aks create `
-            --resource-group $RESOURCE_GROUP `
+            --resource-group $(RESOURCE_GROUP) `
             --name $(AKS_NAME) `
             --enable-cluster-autoscaler `
             --min-count 0 `
