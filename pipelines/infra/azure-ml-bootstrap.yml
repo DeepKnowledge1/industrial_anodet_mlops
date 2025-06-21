@@ -121,7 +121,8 @@ stages:
               --extension-type Microsoft.AzureML.Kubernetes `
               --cluster-type managedClusters `
               --cluster-name $(AKS_NAME) `
-              --resource-group $(RESOURCE_GROUP)
+              --resource-group $(RESOURCE_GROUP) `
+              --configuration-settings enableInference=true
 
 
     - task: AzureCLI@2
