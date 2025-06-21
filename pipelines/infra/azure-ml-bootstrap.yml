@@ -107,6 +107,26 @@ stages:
     #         --resource-group $(RESOURCE_GROUP) `
     #         --workspace-name $(WORKSPACE)
 
+
+
+    - task: AzureCLI@2
+      displayName: 'Step 5 - Create Azure ML Compute Cluster'
+      inputs:
+        azureSubscription: mlops_anomaly_detection
+        scriptType: ps
+        scriptLocation: inlineScript
+        inlineScript: |
+          az k8s-extension create `
+              --name azureml `
+              --extension-type Microsoft.AzureML.Kubernetes `
+              --cluster-type managedClusters `
+              --cluster-name $(AKS_NAME) `
+              --resource-group $(RESOURCE_GROUP) `              
+              --auto-upgrade-minor-version true `
+              --scope cluster `
+              --release-train stable
+
+
     - task: AzureCLI@2
       displayName: 'Step 6 - Attach AKS to Azure ML Workspace'
       inputs:
@@ -122,6 +142,16 @@ stages:
             --name $(ML_AKS_NAME) `
             --resource-id $(az aks show --name $(AKS_NAME) --resource-group $(RESOURCE_GROUP) --query id -o tsv) `
             --identity-type SystemAssigned `
+            --namespace azureml
+
+
+          az ml compute attach \
+            --resource-group $(RESOURCE_GROUP) \
+            --workspace-name $(WORKSPACE) \
+            --type Kubernetes \
+            --name aksml01 \
+            --resource-id $(az aks show --name $(AKS_NAME) --resource-group $(RESOURCE_GROUP) --query id -o tsv) \
+            --identity-type SystemAssigned \
             --namespace azureml
 
 
