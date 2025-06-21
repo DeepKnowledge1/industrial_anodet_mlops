@@ -18,14 +18,14 @@ stages:
     displayName: 'Create ACR, AKS, Workspace, Compute, Dataset'
     steps:
 
-    - task: AzureCLI@2
-      displayName: 'Step 1 - Install Azure ML extension'
-      inputs:
-        azureSubscription: mlops_anomaly_detection
-        scriptType: ps
-        scriptLocation: inlineScript
-        inlineScript: |
-          az extension add --name ml
+    # - task: AzureCLI@2
+    #   displayName: 'Step 1 - Install Azure ML extension'
+    #   inputs:
+    #     azureSubscription: mlops_anomaly_detection
+    #     scriptType: ps
+    #     scriptLocation: inlineScript
+    #     inlineScript: |
+    #       az extension add --name ml
 
     # - task: AzureCLI@2
     #   displayName: 'Step 1 - Create Resource Group'
