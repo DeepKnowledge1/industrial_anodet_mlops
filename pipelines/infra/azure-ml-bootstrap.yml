@@ -71,9 +71,9 @@ stages:
             --resource-group $(RESOURCE_GROUP) `
             --name $(AKS_NAME) `
             --enable-cluster-autoscaler `
-            --min-count 0 `
+            --min-count 1 `
             --max-count 2 `
-            --node-count 0 `
+            --node-count 2 `
             --node-vm-size Standard_DS3_v2 `
             --enable-managed-identity `
             --generate-ssh-keys `
