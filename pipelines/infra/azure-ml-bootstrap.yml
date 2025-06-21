@@ -48,11 +48,14 @@ stages:
         scriptType: ps
         scriptLocation: inlineScript
         inlineScript: |
+
           az acr create `
-            --name $(ACR_NAME) `
-            --resource-group $(RESOURCE_GROUP) `
-            --sku Basic `
-            --location $(LOCATION)
+              --resource-group $RESOURCE_GROUP `
+              --name $ACR_NAME `
+              --sku Basic `
+              --location $LOCATION `
+              --admin-enabled true `
+
 
     - task: AzureCLI@2
       displayName: 'Step 4 - Create AKS Cluster'
@@ -62,11 +65,18 @@ stages:
         scriptLocation: inlineScript
         inlineScript: |
           az aks create `
-            --name $(AKS_NAME) `
             --resource-group $(RESOURCE_GROUP) `
-            --node-count 1 `
+            --name $(AKS_NAME) `
+            --enable-cluster-autoscaler `
+            --min-count 0 `
+            --max-count 2 `
+            --node-vm-size Standard_DS3_v2 `
             --enable-managed-identity `
-            --generate-ssh-keys
+            --generate-ssh-keys `
+            --enable-addons monitoring `
+            --load-balancer-idle-timeout 4 `
+            --no-ssh-key
+
 
     - task: AzureCLI@2
       displayName: 'Step 5 - Create Azure ML Compute Cluster'
@@ -77,24 +87,26 @@ stages:
         inlineScript: |
           az ml compute create `
             --name $(COMPUTE_NAME) `
+            --type AmlCompute `
             --size Standard_DS2_v2 `
-            --type amlcompute `
             --min-instances 0 `
-            --max-instances 2 `
-            --workspace-name $(WORKSPACE) `
-            --resource-group $(RESOURCE_GROUP)
+            --max-instances 1 `
+            --idle-seconds-before-scaledown 20 `
+            --resource-group $(RESOURCE_GROUP) `
+            --workspace-name $(WORKSPACE)
 
-    - task: AzureCLI@2
-      displayName: 'Step 6 - Upload Training Images to ML Dataset'
-      inputs:
-        azureSubscription: mlops_anomaly_detection
-        scriptType: ps
-        scriptLocation: inlineScript
-        inlineScript: |
-          az ml data create `
-            --name anomaly-images `
-            --type uri_folder `
-            --path ./bottle/train/good `
-            --description "Training images for anomaly detection" `
-            --workspace-name $(WORKSPACE) `
-            --resource-group $(RESOURCE_GROUP)
+
+    # - task: AzureCLI@2
+    #   displayName: 'Step 6 - Upload Training Images to ML Dataset'
+    #   inputs:
+    #     azureSubscription: mlops_anomaly_detection
+    #     scriptType: ps
+    #     scriptLocation: inlineScript
+    #     inlineScript: |
+    #       az ml data create `
+    #         --name anomaly-images `
+    #         --type uri_folder `
+    #         --path ./bottle/train/good `
+    #         --description "Training images for anomaly detection" `
+    #         --workspace-name $(WORKSPACE) `
+    #         --resource-group $(RESOURCE_GROUP)
