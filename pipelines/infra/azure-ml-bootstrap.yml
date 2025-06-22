@@ -66,8 +66,6 @@ stages:
     #           --admin-enabled false
 
 
-
-
     # - task: AzureCLI@2
     #   displayName: 'Step 4 - Create AKS Cluster'
     #   inputs:
@@ -126,7 +124,7 @@ stages:
 
 
     # - task: AzureCLI@2
-    #   displayName: 'Step 5 - Create Azure ML Compute Cluster'
+    #   displayName: 'Step 7 - Create Azure ML Compute Cluster'
     #   inputs:
     #     azureSubscription: mlops_anomaly_detection
     #     scriptType: ps
@@ -143,7 +141,7 @@ stages:
     #         --workspace-name $(WORKSPACE)
 
     # - task: AzureCLI@2
-    #   displayName: 'Step 7 - Upload Training Images to ML Dataset'
+    #   displayName: 'Step 8 - Upload Training Images to ML Dataset'
     #   inputs:
     #     azureSubscription: mlops_anomaly_detection
     #     scriptType: ps
@@ -161,7 +159,7 @@ stages:
 
 
     - task: AzureCLI@2
-      displayName: 'Step 8 - Register Training Environment'
+      displayName: 'Step 9 - Register Training Environment'
       inputs:
         azureSubscription: mlops_anomaly_detection
         scriptType: ps
@@ -174,3 +172,4 @@ stages:
             --conda-file "$(Build.SourcesDirectory)/deployment/environment.yml" `
             --workspace-name $(WORKSPACE) `
             --resource-group $(RESOURCE_GROUP)
+            --debug
