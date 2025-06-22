@@ -27,28 +27,28 @@ stages:
     #     inlineScript: |
     #       az extension add --name ml
 
-    # - task: AzureCLI@2
-    #   displayName: 'Step 1 - Create Resource Group'
-    #   inputs:
-    #     azureSubscription: mlops_anomaly_detection
-    #     scriptType: ps
-    #     scriptLocation: inlineScript
-    #     inlineScript: |
-    #       az group create `
-    #         --name $(RESOURCE_GROUP) `
-    #         --location $(LOCATION)
+    - task: AzureCLI@2
+      displayName: 'Step 1 - Create Resource Group'
+      inputs:
+        azureSubscription: mlops_anomaly_detection
+        scriptType: ps
+        scriptLocation: inlineScript
+        inlineScript: |
+          az group create `
+            --name $(RESOURCE_GROUP) `
+            --location $(LOCATION)
 
-    # - task: AzureCLI@2
-    #   displayName: 'Step 2 - Create Azure ML Workspace'
-    #   inputs:
-    #     azureSubscription: mlops_anomaly_detection
-    #     scriptType: ps
-    #     scriptLocation: inlineScript
-    #     inlineScript: |
-    #       az ml workspace create `
-    #         --name $(WORKSPACE) `
-    #         --resource-group $(RESOURCE_GROUP) `
-    #         --location $(LOCATION)
+    - task: AzureCLI@2
+      displayName: 'Step 2 - Create Azure ML Workspace'
+      inputs:
+        azureSubscription: mlops_anomaly_detection
+        scriptType: ps
+        scriptLocation: inlineScript
+        inlineScript: |
+          az ml workspace create `
+            --name $(WORKSPACE) `
+            --resource-group $(RESOURCE_GROUP) `
+            --location $(LOCATION)
 
     # - task: AzureCLI@2
     #   displayName: 'Step 3 - Create Azure Container Registry (ACR)'
