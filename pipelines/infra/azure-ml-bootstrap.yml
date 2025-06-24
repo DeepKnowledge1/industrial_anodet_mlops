@@ -105,8 +105,7 @@ stages:
             --enable-managed-identity `
             --generate-ssh-keys `
             --enable-addons monitoring `
-            --load-balancer-idle-timeout 4 `
-            --no-ssh-key
+            --load-balancer-idle-timeout 4
 
 
     - task: AzureCLI@2
