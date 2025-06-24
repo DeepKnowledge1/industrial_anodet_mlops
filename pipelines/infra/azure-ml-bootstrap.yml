@@ -18,37 +18,37 @@ stages:
     displayName: 'Create ACR, AKS, Workspace, Compute, Dataset'
     steps:
 
-    # - task: AzureCLI@2
-    #   displayName: 'Step 0 - Install Azure ML extension'
-    #   inputs:
-    #     azureSubscription: mlops_anomaly_detection
-    #     scriptType: ps
-    #     scriptLocation: inlineScript
-    #     inlineScript: |
-    #       az extension add --name ml
+    - task: AzureCLI@2
+      displayName: 'Step 0 - Install Azure ML extension'
+      inputs:
+        azureSubscription: mlops_anomaly_detection
+        scriptType: ps
+        scriptLocation: inlineScript
+        inlineScript: |
+          az extension add --name ml
 
-    # - task: AzureCLI@2
-    #   displayName: 'Step 1 - Create Resource Group'
-    #   inputs:
-    #     azureSubscription: mlops_anomaly_detection
-    #     scriptType: ps
-    #     scriptLocation: inlineScript
-    #     inlineScript: |
-    #       az group create `
-    #         --name $(RESOURCE_GROUP) `
-    #         --location $(LOCATION)
+    - task: AzureCLI@2
+      displayName: 'Step 1 - Create Resource Group'
+      inputs:
+        azureSubscription: mlops_anomaly_detection
+        scriptType: ps
+        scriptLocation: inlineScript
+        inlineScript: |
+          az group create `
+            --name $(RESOURCE_GROUP) `
+            --location $(LOCATION)
 
-    # - task: AzureCLI@2
-    #   displayName: 'Step 2 - Create Azure ML Workspace'
-    #   inputs:
-    #     azureSubscription: mlops_anomaly_detection
-    #     scriptType: ps
-    #     scriptLocation: inlineScript
-    #     inlineScript: |
-    #       az ml workspace create `
-    #         --name $(WORKSPACE) `
-    #         --resource-group $(RESOURCE_GROUP) `
-    #         --location $(LOCATION)
+    - task: AzureCLI@2
+      displayName: 'Step 2 - Create Azure ML Workspace'
+      inputs:
+        azureSubscription: mlops_anomaly_detection
+        scriptType: ps
+        scriptLocation: inlineScript
+        inlineScript: |
+          az ml workspace create `
+            --name $(WORKSPACE) `
+            --resource-group $(RESOURCE_GROUP) `
+            --location $(LOCATION)
 
     # - task: AzureCLI@2
     #   displayName: 'Step 2 - Create & Uplaod ssl_cert and ssl_key'
@@ -70,42 +70,42 @@ stages:
     #         --name "ssl-key-pem" `
     #         --file $(SSL_KEY_PATH)          
 
-    # - task: AzureCLI@2
-    #   displayName: 'Step 3 - Create Azure Container Registry (ACR)'
-    #   inputs:
-    #     azureSubscription: mlops_anomaly_detection
-    #     scriptType: ps
-    #     scriptLocation: inlineScript
-    #     inlineScript: |
+    - task: AzureCLI@2
+      displayName: 'Step 3 - Create Azure Container Registry (ACR)'
+      inputs:
+        azureSubscription: mlops_anomaly_detection
+        scriptType: ps
+        scriptLocation: inlineScript
+        inlineScript: |
 
-    #       az acr create `
-    #           --resource-group $(RESOURCE_GROUP) `
-    #           --name $(ACR_NAME) `
-    #           --sku Basic `
-    #           --location $(LOCATION) `
-    #           --admin-enabled false
+          az acr create `
+              --resource-group $(RESOURCE_GROUP) `
+              --name $(ACR_NAME) `
+              --sku Basic `
+              --location $(LOCATION) `
+              --admin-enabled false
 
 
-    # - task: AzureCLI@2
-    #   displayName: 'Step 4 - Create AKS Cluster'
-    #   inputs:
-    #     azureSubscription: mlops_anomaly_detection
-    #     scriptType: ps
-    #     scriptLocation: inlineScript
-    #     inlineScript: |
+    - task: AzureCLI@2
+      displayName: 'Step 4 - Create AKS Cluster'
+      inputs:
+        azureSubscription: mlops_anomaly_detection
+        scriptType: ps
+        scriptLocation: inlineScript
+        inlineScript: |
 
-    #       az aks create `
-    #         --resource-group $(RESOURCE_GROUP) `
-    #         --name $(AKS_NAME) `
-    #         --enable-cluster-autoscaler `
-    #         --min-count 1 `
-    #         --max-count 2 `
-    #         --node-count 2 `
-    #         --node-vm-size Standard_DS3_v2 `
-    #         --enable-managed-identity `
-    #         --generate-ssh-keys `
-    #         --enable-addons monitoring `
-    #         --load-balancer-idle-timeout 4
+          az aks create `
+            --resource-group $(RESOURCE_GROUP) `
+            --name $(AKS_NAME) `
+            --enable-cluster-autoscaler `
+            --min-count 1 `
+            --max-count 2 `
+            --node-count 2 `
+            --node-vm-size Standard_DS3_v2 `
+            --enable-managed-identity `
+            --generate-ssh-keys `
+            --enable-addons monitoring `
+            --load-balancer-idle-timeout 4
 
 
     - task: AzureCLI@2

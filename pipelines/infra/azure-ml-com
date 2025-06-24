@@ -1,3 +1,4 @@
+
 trigger:
   paths:
     include:
@@ -33,15 +34,9 @@ stages:
         scriptType: ps
         scriptLocation: inlineScript
         inlineScript: |
-          $rgExists = az group exists --name $(RESOURCE_GROUP) --output tsv
-          if ($rgExists -eq "false") {
-            Write-Host "Creating Resource Group: $(RESOURCE_GROUP)"
-            az group create `
-              --name $(RESOURCE_GROUP) `
-              --location $(LOCATION)
-          } else {
-            Write-Host "Resource Group $(RESOURCE_GROUP) already exists, skipping creation"
-          }
+          az group create `
+            --name $(RESOURCE_GROUP) `
+            --location $(LOCATION)
 
     - task: AzureCLI@2
       displayName: 'Step 2 - Create Azure ML Workspace'
@@ -50,107 +45,10 @@ stages:
         scriptType: ps
         scriptLocation: inlineScript
         inlineScript: |
-          $workspace = az ml workspace list --resource-group $(RESOURCE_GROUP) --query "[?name=='$(WORKSPACE)'].name" --output tsv 2>$null
-          if ([string]::IsNullOrEmpty($workspace)) {
-            Write-Host "Creating Azure ML Workspace: $(WORKSPACE)"
-            az ml workspace create `
-              --name $(WORKSPACE) `
-              --resource-group $(RESOURCE_GROUP) `
-              --location $(LOCATION)
-          } else {
-            Write-Host "Azure ML Workspace $(WORKSPACE) already exists, skipping creation"
-          }
-
-    - task: AzureCLI@2
-      displayName: 'Step 3 - Create Azure Container Registry (ACR)'
-      inputs:
-        azureSubscription: mlops_anomaly_detection
-        scriptType: ps
-        scriptLocation: inlineScript
-        inlineScript: |
-          $acr = az acr list --resource-group $(RESOURCE_GROUP) --query "[?name=='$(ACR_NAME)'].name" --output tsv 2>$null
-          if ([string]::IsNullOrEmpty($acr)) {
-            Write-Host "Creating Azure Container Registry: $(ACR_NAME)"
-            az acr create `
-                --resource-group $(RESOURCE_GROUP) `
-                --name $(ACR_NAME) `
-                --sku Basic `
-                --location $(LOCATION) `
-                --admin-enabled false
-          } else {
-            Write-Host "Azure Container Registry $(ACR_NAME) already exists, skipping creation"
-          }
-
-    - task: AzureCLI@2
-      displayName: 'Step 4 - Create AKS Cluster'
-      inputs:
-        azureSubscription: mlops_anomaly_detection
-        scriptType: ps
-        scriptLocation: inlineScript
-        inlineScript: |
-          $aks = az aks list --resource-group $(RESOURCE_GROUP) --query "[?name=='$(AKS_NAME)'].name" --output tsv 2>$null
-          if ([string]::IsNullOrEmpty($aks)) {
-            Write-Host "Creating AKS Cluster: $(AKS_NAME)"
-            az aks create `
-              --resource-group $(RESOURCE_GROUP) `
-              --name $(AKS_NAME) `
-              --enable-cluster-autoscaler `
-              --min-count 1 `
-              --max-count 2 `
-              --node-count 2 `
-              --node-vm-size Standard_DS3_v2 `
-              --enable-managed-identity `
-              --generate-ssh-keys `
-              --enable-addons monitoring `
-              --load-balancer-idle-timeout 4 `
-              --no-ssh-key
-          } else {
-            Write-Host "AKS Cluster $(AKS_NAME) already exists, skipping creation"
-          }
-
-    - task: AzureCLI@2
-      displayName: 'Step 5 - Create k8s-extension'
-      inputs:
-        azureSubscription: mlops_anomaly_detection
-        scriptType: ps
-        scriptLocation: inlineScript
-        inlineScript: |
-          $extension = az k8s-extension list --cluster-name $(AKS_NAME) --cluster-type managedClusters --resource-group $(RESOURCE_GROUP) --query "[?name=='azureml'].name" --output tsv 2>$null
-          if ([string]::IsNullOrEmpty($extension)) {
-            Write-Host "Creating k8s-extension: azureml"
-            az k8s-extension create `
-                --name azureml `
-                --extension-type Microsoft.AzureML.Kubernetes `
-                --cluster-type managedClusters `
-                --cluster-name $(AKS_NAME) `
-                --resource-group $(RESOURCE_GROUP) `
-                --configuration-settings enableInference=true allowInsecureConnections=true inferenceRouterServiceType=LoadBalancer
-          } else {
-            Write-Host "k8s-extension azureml already exists, skipping creation"
-          }
-
-    - task: AzureCLI@2
-      displayName: 'Step 6 - Attach AKS to Azure ML Workspace'
-      inputs:
-        azureSubscription: mlops_anomaly_detection
-        scriptType: ps
-        scriptLocation: inlineScript
-        inlineScript: |
-          $compute = az ml compute list --resource-group $(RESOURCE_GROUP) --workspace-name $(WORKSPACE) --query "[?name=='$(ML_AKS_NAME)'].name" --output tsv 2>$null
-          if ([string]::IsNullOrEmpty($compute)) {
-            Write-Host "Attaching AKS to Azure ML Workspace: $(ML_AKS_NAME)"
-            $aksResourceId = az aks show --name $(AKS_NAME) --resource-group $(RESOURCE_GROUP) --query id -o tsv
-            az ml compute attach `
-              --resource-group $(RESOURCE_GROUP) `
-              --workspace-name $(WORKSPACE) `
-              --type Kubernetes `
-              --name $(ML_AKS_NAME) `
-              --resource-id $aksResourceId `
-              --identity-type SystemAssigned `
-              --namespace azureml
-          } else {
-            Write-Host "AKS compute $(ML_AKS_NAME) already attached to workspace, skipping attachment"
-          }
+          az ml workspace create `
+            --name $(WORKSPACE) `
+            --resource-group $(RESOURCE_GROUP) `
+            --location $(LOCATION)
 
     - task: AzureCLI@2
       displayName: 'Step 7 - Create Azure ML Compute Cluster'
@@ -159,44 +57,16 @@ stages:
         scriptType: ps
         scriptLocation: inlineScript
         inlineScript: |
-          $compute = az ml compute list --resource-group $(RESOURCE_GROUP) --workspace-name $(WORKSPACE) --query "[?name=='$(COMPUTE_NAME)'].name" --output tsv 2>$null
-          if ([string]::IsNullOrEmpty($compute)) {
-            Write-Host "Creating Azure ML Compute Cluster: $(COMPUTE_NAME)"
-            az ml compute create `
-              --name $(COMPUTE_NAME) `
-              --type AmlCompute `
-              --size Standard_DS2_v2 `
-              --min-instances 0 `
-              --max-instances 1 `
-              --idle-time-before-scale-down 120 `
-              --resource-group $(RESOURCE_GROUP) `
-              --workspace-name $(WORKSPACE)
-          } else {
-            Write-Host "Azure ML Compute Cluster $(COMPUTE_NAME) already exists, skipping creation"
-          }
+          az ml compute create `
+            --name $(COMPUTE_NAME) `
+            --type AmlCompute `
+            --size Standard_DS2_v2 `
+            --min-instances 0 `
+            --max-instances 1 `
+            --idle-time-before-scale-down 120 `
+            --resource-group $(RESOURCE_GROUP) `
+            --workspace-name $(WORKSPACE)
 
-    - task: AzureCLI@2
-      displayName: 'Step 8 - Upload Training Images to ML Dataset'
-      inputs:
-        azureSubscription: mlops_anomaly_detection
-        scriptType: ps
-        scriptLocation: inlineScript
-        inlineScript: |
-          $dataset = az ml data list --resource-group $(RESOURCE_GROUP) --workspace-name $(WORKSPACE) --query "[?name=='anomaly-images'].name" --output tsv 2>$null
-          if ([string]::IsNullOrEmpty($dataset)) {
-            Write-Host "Creating ML Dataset: anomaly-images"
-            $path = "$(DATA_ANO_DIR)"
-            Write-Host "Uploading from: $path"
-            az ml data create `
-              --name anomaly-images `
-              --type uri_folder `
-              --path $path `
-              --description "Training + test + ground truth images for anomaly detection" `
-              --workspace-name "$(WORKSPACE)" `
-              --resource-group "$(RESOURCE_GROUP)"
-          } else {
-            Write-Host "ML Dataset anomaly-images already exists, skipping creation"
-          }
 
     - task: AzureCLI@2
       displayName: 'Step 9 - Register Training Environment'
@@ -205,15 +75,11 @@ stages:
         scriptType: ps
         scriptLocation: inlineScript
         inlineScript: |
-          $environment = az ml environment list --resource-group $(RESOURCE_GROUP) --workspace-name $(WORKSPACE) --query "[?name=='mlops_anomavision'].name" --output tsv 2>$null
-          if ([string]::IsNullOrEmpty($environment)) {
-            Write-Host "Creating ML Environment: mlops_anomavision"
-            az ml environment create `
-              --name mlops_anomavision `
-              --image mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:latest `
-              --conda-file "$(Build.SourcesDirectory)/deployment/environment.yml" `
-              --workspace-name $(WORKSPACE) `
-              --resource-group $(RESOURCE_GROUP)
-          } else {
-            Write-Host "ML Environment mlops_anomavision already exists, skipping creation"
-          }
+
+          az ml environment create `
+            --name mlops_anomavision `
+            --image mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:latest `
+            --conda-file "$(Build.SourcesDirectory)/deployment/environment.yml" `
+            --workspace-name $(WORKSPACE) `
+            --resource-group $(RESOURCE_GROUP)
+          
