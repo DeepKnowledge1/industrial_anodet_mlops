@@ -49,15 +49,16 @@ stages:
             --name $(WORKSPACE) `
             --resource-group $(RESOURCE_GROUP) `
             --location $(LOCATION) `
-            --key-vault $(KEY_VAULT_NAME)
 
     - task: AzureCLI@2
-      displayName: 'Step 2 - Uplaod ssl_cert and ssl_key'
+      displayName: 'Step 2 - Create & Uplaod ssl_cert and ssl_key'
       inputs:
         azureSubscription: mlops_anomaly_detection
         scriptType: ps
         scriptLocation: inlineScript
         inlineScript: |
+          az keyvault create --name $(KEY_VAULT_NAME)  --resource-group $(RESOURCE_GROUP)
+          
           az keyvault secret set `
             --vault-name $(KEY_VAULT_NAME) `
             --resource-group $(RESOURCE_GROUP) `
