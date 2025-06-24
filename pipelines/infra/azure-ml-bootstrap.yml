@@ -116,25 +116,14 @@ stages:
         scriptLocation: inlineScript
         inlineScript: |
 
-          # Fetch secrets from Key Vault
-          $SSL_CERT = az keyvault secret show --name ssl-cert-pem --vault-name keyvault-test2248 --query value -o tsv
-          $SSL_KEY = az keyvault secret show --name ssl-key-pem --vault-name keyvault-test2248 --query value -o tsv
-
-          # Write to PEM files
-          $SSL_CERT | Out-File -FilePath "./ssl_cert.pem" -Encoding ascii
-          $SSL_KEY | Out-File -FilePath "./ssl_key.pem" -Encoding ascii
-
-          # Step 6: Deploy Azure ML extension on AKS
-          Write-Host "************************************Deploying Azure ML extension on AKS..."
-
           az k8s-extension create `
-            --name azureml `
-            --extension-type Microsoft.AzureML.Kubernetes `
-            --cluster-type managedClusters `
-            --cluster-name $(AKS_NAME) `
-            --resource-group $(RESOURCE_GROUP) `
-            --configuration-settings enableTraining=True enableInference=True inferenceRouterServiceType=loadBalancer sslCname=your.domain.com `
-            --config-protected-settings sslCertPemFile=./ssl_cert.pem sslKeyPemFile=./ssl_key.pem
+              --name azureml `
+              --extension-type Microsoft.AzureML.Kubernetes `
+              --cluster-type managedClusters `
+              --cluster-name $(AKS_NAME) `
+              --resource-group $(RESOURCE_GROUP) `
+              --configuration-settings enableInference=True inferenceRouterServiceType=loadBalancer sslCname=your.domain.com `
+              --config-protected-settings sslCertPemFile=$(SSL_CERT_PATH) sslKeyPemFile=$(SSL_KEY_PATH)
 
     - task: AzureCLI@2
       displayName: 'Step 6 - Attach AKS to Azure ML Workspace'
