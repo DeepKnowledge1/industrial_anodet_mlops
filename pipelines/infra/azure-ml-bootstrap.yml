@@ -48,7 +48,7 @@ stages:
           az ml workspace create `
             --name $(WORKSPACE) `
             --resource-group $(RESOURCE_GROUP) `
-            --location $(LOCATION) `
+            --location $(LOCATION)
 
     - task: AzureCLI@2
       displayName: 'Step 2 - Create & Uplaod ssl_cert and ssl_key'
