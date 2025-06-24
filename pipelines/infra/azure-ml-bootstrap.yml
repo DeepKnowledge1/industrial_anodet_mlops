@@ -86,26 +86,26 @@ stages:
     #           --admin-enabled false
 
 
-    - task: AzureCLI@2
-      displayName: 'Step 4 - Create AKS Cluster'
-      inputs:
-        azureSubscription: mlops_anomaly_detection
-        scriptType: ps
-        scriptLocation: inlineScript
-        inlineScript: |
+    # - task: AzureCLI@2
+    #   displayName: 'Step 4 - Create AKS Cluster'
+    #   inputs:
+    #     azureSubscription: mlops_anomaly_detection
+    #     scriptType: ps
+    #     scriptLocation: inlineScript
+    #     inlineScript: |
 
-          az aks create `
-            --resource-group $(RESOURCE_GROUP) `
-            --name $(AKS_NAME) `
-            --enable-cluster-autoscaler `
-            --min-count 1 `
-            --max-count 2 `
-            --node-count 2 `
-            --node-vm-size Standard_DS3_v2 `
-            --enable-managed-identity `
-            --generate-ssh-keys `
-            --enable-addons monitoring `
-            --load-balancer-idle-timeout 4
+    #       az aks create `
+    #         --resource-group $(RESOURCE_GROUP) `
+    #         --name $(AKS_NAME) `
+    #         --enable-cluster-autoscaler `
+    #         --min-count 1 `
+    #         --max-count 2 `
+    #         --node-count 2 `
+    #         --node-vm-size Standard_DS3_v2 `
+    #         --enable-managed-identity `
+    #         --generate-ssh-keys `
+    #         --enable-addons monitoring `
+    #         --load-balancer-idle-timeout 4
 
 
     - task: AzureCLI@2
@@ -115,16 +115,26 @@ stages:
         scriptType: ps
         scriptLocation: inlineScript
         inlineScript: |
-          $SSL_CERT=$(az keyvault secret show --name ssl-cert-pem --vault-name $(KEY_VAULT_NAME) --query value -o tsv)
-          $SSL_KEY=$(az keyvault secret show --name ssl-key-pem --vault-name $(KEY_VAULT_NAME) --query value -o tsv)
+
+          # Fetch secrets from Key Vault
+          $SSL_CERT = az keyvault secret show --name ssl-cert-pem --vault-name keyvault-test2248 --query value -o tsv
+          $SSL_KEY = az keyvault secret show --name ssl-key-pem --vault-name keyvault-test2248 --query value -o tsv
+
+          # Write to PEM files
+          $SSL_CERT | Out-File -FilePath "./ssl_cert.pem" -Encoding ascii
+          $SSL_KEY | Out-File -FilePath "./ssl_key.pem" -Encoding ascii
+
+          # Step 6: Deploy Azure ML extension on AKS
+          Write-Host "************************************Deploying Azure ML extension on AKS..."
+
           az k8s-extension create `
-              --name azureml `
-              --extension-type Microsoft.AzureML.Kubernetes `
-              --cluster-type managedClusters `
-              --cluster-name $(AKS_NAME) `
-              --resource-group $(RESOURCE_GROUP) `
-              --configuration-settings enableInference=True inferenceRouterServiceType=loadBalancer sslCname=your.domain.com `
-              --config-protected-settings sslCertPemFile=$SSL_CERT sslKeyPemFile=$SSL_KEY
+            --name azureml `
+            --extension-type Microsoft.AzureML.Kubernetes `
+            --cluster-type managedClusters `
+            --cluster-name $(AKS_NAME) `
+            --resource-group $(RESOURCE_GROUP) `
+            --configuration-settings enableTraining=True enableInference=True inferenceRouterServiceType=loadBalancer sslCname=your.domain.com `
+            --config-protected-settings sslCertPemFile=./ssl_cert.pem sslKeyPemFile=./ssl_key.pem
 
     - task: AzureCLI@2
       displayName: 'Step 6 - Attach AKS to Azure ML Workspace'
