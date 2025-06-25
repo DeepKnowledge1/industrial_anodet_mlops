@@ -12,12 +12,15 @@ import os
 from typing import Optional
 from contextlib import asynccontextmanager
 import AnomaVision.anodet as anodet
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend
+import matplotlib.pyplot as plt
 
 
 # Global variables
 sess = None
 padim_model = None
-ANOMALY_THRESHOLD = 13.0  # Based on your detect.py
+ANOMALY_THRESHOLD = 13.0
 
 async def load_model():
     global sess, padim_model
@@ -57,13 +60,12 @@ class PredictionResult(BaseModel):
     anomaly_score: float
     is_anomaly: bool
     anomaly_map_base64: str
-    boundary_image_base64: Optional[str] = None
-    heatmap_image_base64: Optional[str] = None
+    boundary_image_base64: Optional[str] = ""
+    heatmap_image_base64: Optional[str] = ""
+    highlighted_image_base64: Optional[str] = ""
 
 class ConfigModel(BaseModel):
     threshold: float = ANOMALY_THRESHOLD
-
-
 
 @app.get("/")
 async def root():
@@ -96,56 +98,86 @@ async def update_config(config: ConfigModel):
     ANOMALY_THRESHOLD = config.threshold
     return {"message": f"Threshold updated to {ANOMALY_THRESHOLD}"}
 
-def preprocess_image(image: Image.Image) -> np.ndarray:
-    """Convert PIL image to numpy array in the format expected by anodet"""
-    # Convert PIL to numpy array (RGB)
-    image_np = np.array(image)
+def preprocess_image_from_upload(file_contents: bytes) -> np.ndarray:
+    """Convert uploaded file to numpy array matching detect.py preprocessing"""
+    # Read image using PIL and convert to RGB
+    image_pil = Image.open(io.BytesIO(file_contents)).convert("RGB")
+    
+    # Convert PIL to numpy array (this matches how detect.py reads with cv2 then converts to RGB)
+    image_np = np.array(image_pil)
+    
     return image_np
 
-def create_visualizations(image_np: np.ndarray, score_map: np.ndarray, 
-                         image_score: float) -> tuple:
-    """Create visualization images similar to detect.py"""
+def create_visualizations(image_np: np.ndarray, score_maps: torch.Tensor, image_scores: torch.Tensor) -> tuple:
+    """Create visualization images exactly like detect.py"""
     try:
-        # Convert score map to classification
-        score_map_classification = anodet.classification(score_map, ANOMALY_THRESHOLD)
-        image_classification = anodet.classification(image_score, ANOMALY_THRESHOLD)
+        print("Creating visualizations...")
         
-        # Create boundary image
-        boundary_image = anodet.visualization.framed_boundary_images(
-            np.array([image_np]), 
-            [score_map_classification], 
-            [image_classification], 
+        # Apply classifications exactly like detect.py
+        score_map_classifications = anodet.classification(score_maps, ANOMALY_THRESHOLD)
+        image_classifications = anodet.classification(image_scores, ANOMALY_THRESHOLD)
+        
+        print(f"Score map classifications: {score_map_classifications}")
+        print(f"Image classifications: {image_classifications}")
+        
+        # Prepare images array (single image but in array format like detect.py)
+        test_images = np.array([image_np])
+        
+        # Create visualizations exactly like detect.py
+        boundary_images = anodet.visualization.framed_boundary_images(
+            test_images, 
+            score_map_classifications, 
+            image_classifications, 
             padding=40
-        )[0]
+        )
         
-        # Create heatmap image
-        heatmap_image = anodet.visualization.heatmap_images(
-            np.array([image_np]), 
-            [score_map], 
+        heatmap_images = anodet.visualization.heatmap_images(
+            test_images, 
+            score_maps, 
             alpha=0.5
-        )[0]
+        )
         
-        return boundary_image, heatmap_image
+        highlighted_images = anodet.visualization.highlighted_images(
+            [image_np], 
+            score_map_classifications, 
+            color=(128, 0, 128)
+        )
+        
+        print("All visualizations created successfully")
+        
+        return boundary_images[0], heatmap_images[0], highlighted_images[0]
+        
     except Exception as e:
         print(f"Visualization error: {e}")
-        return None, None
+        import traceback
+        traceback.print_exc()
+        return None, None, None
 
 def numpy_to_base64(image_array: np.ndarray) -> str:
     """Convert numpy array to base64 encoded PNG"""
     if image_array is None:
         return ""
     
-    # Ensure the array is in the right format
-    if image_array.dtype != np.uint8:
-        image_array = (image_array * 255).astype(np.uint8)
-    
-    # Convert to PIL Image
-    pil_image = Image.fromarray(image_array)
-    
-    # Convert to base64
-    buffered = io.BytesIO()
-    pil_image.save(buffered, format="PNG")
-    return base64.b64encode(buffered.getvalue()).decode("utf-8")
+    try:
+        # Ensure the array is in the right format (0-255 uint8)
+        if image_array.dtype != np.uint8:
+            # Handle different data ranges
+            if image_array.max() <= 1.0:
+                image_array = (image_array * 255).astype(np.uint8)
+            else:
+                image_array = np.clip(image_array, 0, 255).astype(np.uint8)
+        
+        # Convert to PIL Image
+        pil_image = Image.fromarray(image_array)
+        
+        # Convert to base64
+        buffered = io.BytesIO()
+        pil_image.save(buffered, format="PNG")
+        return base64.b64encode(buffered.getvalue()).decode("utf-8")
+        
+    except Exception as e:
+        print(f"Error converting to base64: {e}")
+        return ""
 
 @app.post("/predict", response_model=PredictionResult)
 async def predict_anomaly(
@@ -160,15 +192,17 @@ async def predict_anomaly(
         raise HTTPException(status_code=400, detail="File must be an image")
 
     try:
-        # Read and process image
+        # Read and preprocess image exactly like detect.py
         contents = await file.read()
-        image = Image.open(io.BytesIO(contents)).convert("RGB")
-        image_np = preprocess_image(image)
+        image_np = preprocess_image_from_upload(contents)
+        
+        print(f"Image shape: {image_np.shape}")
+        print(f"Image dtype: {image_np.dtype}")
         
         if sess is not None:
-            # ONNX inference
-            input_tensor = anodet.standard_image_transform(image).unsqueeze(0)
-            input_numpy = input_tensor.numpy()
+            # ONNX inference - convert single image to batch
+            batch = anodet.to_batch([image_np], anodet.standard_image_transform, torch.device('cpu'))
+            input_numpy = batch.numpy()
             
             input_name = sess.get_inputs()[0].name
             output_names = [output.name for output in sess.get_outputs()]
@@ -177,72 +211,95 @@ async def predict_anomaly(
                 raise HTTPException(status_code=500, detail="Model must have at least 2 outputs")
             
             outputs = sess.run(output_names, {input_name: input_numpy})
-            anomaly_score = float(outputs[0].item())
-            score_map = outputs[1].squeeze()
+            
+            # Convert outputs back to torch tensors for compatibility with visualization functions
+            image_scores = torch.tensor([outputs[0].item()])
+            score_maps = torch.tensor(outputs[1])
             
         else:
-            # PyTorch inference
-            batch = anodet.to_batch([image_np], anodet.standard_image_transform, padim_model.device)
+            # PyTorch inference - exactly like detect.py
+            device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+            batch = anodet.to_batch([image_np], anodet.standard_image_transform, device)
+            
+            print(f"Batch shape: {batch.shape}")
+            
             with torch.no_grad():
                 image_scores, score_maps = padim_model.predict(batch)
             
-            anomaly_score = float(image_scores[0])
-            score_map = score_maps[0].cpu().numpy()
+            # Move to CPU for processing
+            image_scores = image_scores.cpu()
+            score_maps = score_maps.cpu()
 
-        # Determine if it's an anomaly
-        is_anomaly = anomaly_score > ANOMALY_THRESHOLD
+        print(f"Image scores: {image_scores}")
+        print(f"Score maps shape: {score_maps.shape}")
         
-        # Create anomaly map visualization
-        score_map_normalized = score_map.copy()
-        if score_map.max() - score_map.min() > 0:
-            score_map_normalized = (score_map - score_map.min()) / (score_map.max() - score_map.min())
+        # Get single values
+        anomaly_score = float(image_scores[0])
+        is_anomaly = anomaly_score >= ANOMALY_THRESHOLD
+        
+        # Create anomaly map (normalized score map)
+        score_map_np = score_maps[0].numpy()
+        score_map_normalized = score_map_np.copy()
+        
+        if score_map_np.max() - score_map_np.min() > 0:
+            score_map_normalized = (score_map_np - score_map_np.min()) / (score_map_np.max() - score_map_np.min())
         else:
-            score_map_normalized = np.zeros_like(score_map)
-        
+            score_map_normalized = np.zeros_like(score_map_np)
+
         anomaly_map_base64 = numpy_to_base64(score_map_normalized)
-        
-        # Create additional visualizations if requested
-        boundary_image_base64 = None
-        heatmap_image_base64 = None
-        
+
+        # Initialize visualization base64 strings
+        boundary_image_base64 = ""
+        heatmap_image_base64 = ""
+        highlighted_image_base64 = ""
+
         if include_visualizations:
-            try:
-                boundary_image, heatmap_image = create_visualizations(
-                    image_np, score_map, anomaly_score
-                )
-                if boundary_image is not None:
-                    boundary_image_base64 = numpy_to_base64(boundary_image)
-                if heatmap_image is not None:
-                    heatmap_image_base64 = numpy_to_base64(heatmap_image)
-            except Exception as viz_error:
-                print(f"Visualization creation failed: {viz_error}")
-                # Continue without visualizations
+            print("Creating visualizations...")
+            boundary_image, heatmap_image, highlighted_image = create_visualizations(
+                image_np, score_maps, image_scores
+            )
+
+            if boundary_image is not None:
+                boundary_image_base64 = numpy_to_base64(boundary_image)
+                print("✓ Boundary image created")
+            else:
+                print("❗ Boundary image is None")
+
+            if heatmap_image is not None:
+                heatmap_image_base64 = numpy_to_base64(heatmap_image)
+                print("✓ Heatmap image created")
+            else:
+                print("❗ Heatmap image is None")
+                
+            if highlighted_image is not None:
+                highlighted_image_base64 = numpy_to_base64(highlighted_image)
+                print("✓ Highlighted image created")
+            else:
+                print("❗ Highlighted image is None")
 
         return PredictionResult(
             anomaly_score=anomaly_score,
             is_anomaly=is_anomaly,
-            anomaly_map_base64=anomaly_map_base64,
+            # anomaly_map_base64=anomaly_map_base64,
             boundary_image_base64=boundary_image_base64,
-            heatmap_image_base64=heatmap_image_base64
+            heatmap_image_base64=heatmap_image_base64,
+            # highlighted_image_base64=highlighted_image_base64
         )
 
-    except FileNotFoundError as e:
-        raise HTTPException(status_code=500, detail="Model file not found")
-    except onnxruntime.OrtException as e:
-        raise HTTPException(status_code=500, detail=f"ONNX Runtime error: {e}")
     except Exception as e:
+        print(f"Prediction error: {str(e)}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
 
 @app.post("/predict-batch")
 async def predict_batch(files: list[UploadFile] = File(...)):
-    """Batch prediction endpoint"""
-    if len(files) > 10:  # Limit batch size
+    if len(files) > 10:
         raise HTTPException(status_code=400, detail="Maximum 10 files per batch")
     
     results = []
     for i, file in enumerate(files):
         try:
-            # Process each file
             result = await predict_anomaly(file, include_visualizations=False)
             results.append({
                 "file_index": i,
@@ -280,6 +337,10 @@ async def get_model_info():
         raise HTTPException(status_code=500, detail="No model loaded")
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=False)
-        
-    # To run use :  uvicorn src/fastapi_app:app --host 0.0.0.0 --port 8000
+    # Use string import for proper reload functionality
+    uvicorn.run("fastapi_app:app", host="0.0.0.0", port=8000, reload=False)
+    
+    # Alternative: Run directly without reload
+    # uvicorn.run(app, host="0.0.0.0", port=8000, reload=False)
+    
+    # To run from command line: uvicorn fastapi_app:app --host 0.0.0.0 --port 8000

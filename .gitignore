@@ -52,6 +52,7 @@ model_weights/*.h5
 .Trashes
 ehthumbs.db
 Thumbs.db
-padim_model.onnx
+*.onnx
 mlruns/
 distributions/
+*.pt
