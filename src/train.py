@@ -3,7 +3,7 @@ Enhanced training script with MLflow integration for PaDiM anomaly detection mod
 """
 
 import os
-import AnomaVision.anodet
+import AnomaVision.anodet as anodet
 import numpy as np
 import torch
 import cv2
@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 def parse_args():
     parser = argparse.ArgumentParser(description="Train a PaDiM model for anomaly detection with MLflow tracking.")
 
-    parser.add_argument('--dataset_path', default=r"D:\01-DATA\bottle", type=str, required=False,
+    parser.add_argument('--dataset_path', default="D:/01-DATA/bottle", type=str, required=False,
                         help='Path to the dataset folder containing "train/good" images.')
 
     parser.add_argument('--model_data_path', type=str, default='./distributions/',
@@ -199,7 +199,7 @@ def main(args):
         args.run_name = f"padim_{args.backbone}_{timestamp}"
 
     # Load training dataset
-    train_dataset = AnomaVision.anodet.AnodetDataset(os.path.join(DATASET_PATH, "train/good"))
+    train_dataset = anodet.AnodetDataset(os.path.join(DATASET_PATH, "train/good"))
     train_dataloader = DataLoader(train_dataset, batch_size=args.batch_size)
     logger.info(f"Number of training images: {len(train_dataset)}")
 
@@ -209,7 +209,7 @@ def main(args):
         test_path = args.test_dataset_path or DATASET_PATH
         try:
             # Try to load as MVTec dataset for evaluation
-            test_dataset = AnomaVision.anodet.MVTecDataset(test_path, class_name='bottle', is_train=False)
+            test_dataset = anodet.MVTecDataset(test_path, class_name='bottle', is_train=False)
             test_dataloader = DataLoader(test_dataset, batch_size=args.batch_size)
             logger.info(f"Number of test images: {len(test_dataset)}")
         except Exception as e:
@@ -236,7 +236,7 @@ def main(args):
 
             # Initialize model
             logger.info("Initializing PaDiM model...")
-            padim = AnomaVision.anodet.Padim(
+            padim = anodet.Padim(
                 backbone=args.backbone,
                 device=device,
                 layer_indices=args.layer_indices,
