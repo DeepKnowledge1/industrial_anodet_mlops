@@ -21,6 +21,7 @@ import matplotlib.pyplot as plt
 sess = None
 padim_model = None
 ANOMALY_THRESHOLD = 13.0
+RESIZE_SIZE = (224, 224)
 
 async def load_model():
     global sess, padim_model
@@ -59,13 +60,15 @@ app = FastAPI(title="Anomaly Detection API", version="1.0.0", lifespan=lifespan)
 class PredictionResult(BaseModel):
     anomaly_score: float
     is_anomaly: bool
-    anomaly_map_base64: str
+    anomaly_map_base64: Optional[str] = ""
     boundary_image_base64: Optional[str] = ""
     heatmap_image_base64: Optional[str] = ""
     highlighted_image_base64: Optional[str] = ""
 
 class ConfigModel(BaseModel):
     threshold: float = ANOMALY_THRESHOLD
+    resize_width: int = 224
+    resize_height: int = 224
 
 @app.get("/")
 async def root():
@@ -89,14 +92,18 @@ async def health_check():
     return {
         "status": "healthy" if model_loaded else "unhealthy",
         "model_type": "onnx" if sess else "pytorch" if padim_model else "none",
-        "threshold": ANOMALY_THRESHOLD
+        "threshold": ANOMALY_THRESHOLD,
+        "resize_size": RESIZE_SIZE
     }
 
 @app.post("/config")
 async def update_config(config: ConfigModel):
-    global ANOMALY_THRESHOLD
+    global ANOMALY_THRESHOLD, RESIZE_SIZE
     ANOMALY_THRESHOLD = config.threshold
-    return {"message": f"Threshold updated to {ANOMALY_THRESHOLD}"}
+    RESIZE_SIZE = (config.resize_width, config.resize_height)
+    return {
+        "message": f"Threshold updated to {ANOMALY_THRESHOLD}, Resize size set to {RESIZE_SIZE}"
+    }
 
 def preprocess_image_from_upload(file_contents: bytes) -> np.ndarray:
     """Convert uploaded file to numpy array matching detect.py preprocessing"""
@@ -117,8 +124,8 @@ def create_visualizations(image_np: np.ndarray, score_maps: torch.Tensor, image_
         score_map_classifications = anodet.classification(score_maps, ANOMALY_THRESHOLD)
         image_classifications = anodet.classification(image_scores, ANOMALY_THRESHOLD)
         
-        print(f"Score map classifications: {score_map_classifications}")
-        print(f"Image classifications: {image_classifications}")
+        # print(f"Score map classifications: {score_map_classifications}")
+        # print(f"Image classifications: {image_classifications}")
         
         # Prepare images array (single image but in array format like detect.py)
         test_images = np.array([image_np])
@@ -153,8 +160,8 @@ def create_visualizations(image_np: np.ndarray, score_maps: torch.Tensor, image_
         traceback.print_exc()
         return None, None, None
 
-def numpy_to_base64(image_array: np.ndarray) -> str:
-    """Convert numpy array to base64 encoded PNG"""
+def numpy_to_base64(image_array: np.ndarray, resize_to: tuple[int, int] = None) -> str:
+    """Convert numpy array to base64-encoded PNG, optionally resized"""
     if image_array is None:
         return ""
     
@@ -168,13 +175,12 @@ def numpy_to_base64(image_array: np.ndarray) -> str:
                 image_array = np.clip(image_array, 0, 255).astype(np.uint8)
         
         # Convert to PIL Image
-        pil_image = Image.fromarray(image_array)
-        
-        # Convert to base64
+        image = Image.fromarray(image_array)
+        if resize_to is not None:
+            image = image.resize(resize_to, Image.BILINEAR)
         buffered = io.BytesIO()
-        pil_image.save(buffered, format="PNG")
+        image.save(buffered, format="PNG")
         return base64.b64encode(buffered.getvalue()).decode("utf-8")
-        
     except Exception as e:
         print(f"Error converting to base64: {e}")
         return ""
@@ -246,7 +252,7 @@ async def predict_anomaly(
         else:
             score_map_normalized = np.zeros_like(score_map_np)
 
-        anomaly_map_base64 = numpy_to_base64(score_map_normalized)
+        anomaly_map_base64 = numpy_to_base64(score_map_normalized,RESIZE_SIZE)
 
         # Initialize visualization base64 strings
         boundary_image_base64 = ""
@@ -260,19 +266,19 @@ async def predict_anomaly(
             )
 
             if boundary_image is not None:
-                boundary_image_base64 = numpy_to_base64(boundary_image)
+                boundary_image_base64 = numpy_to_base64(boundary_image,RESIZE_SIZE)
                 print("✓ Boundary image created")
             else:
                 print("❗ Boundary image is None")
 
             if heatmap_image is not None:
-                heatmap_image_base64 = numpy_to_base64(heatmap_image)
+                heatmap_image_base64 = numpy_to_base64(heatmap_image,RESIZE_SIZE)
                 print("✓ Heatmap image created")
             else:
                 print("❗ Heatmap image is None")
                 
             if highlighted_image is not None:
-                highlighted_image_base64 = numpy_to_base64(highlighted_image)
+                highlighted_image_base64 = numpy_to_base64(highlighted_image,RESIZE_SIZE)
                 print("✓ Highlighted image created")
             else:
                 print("❗ Highlighted image is None")
