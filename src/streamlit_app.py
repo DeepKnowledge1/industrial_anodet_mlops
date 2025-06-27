@@ -95,8 +95,8 @@ with st.sidebar:
     )
     # Resize configuration
     st.subheader("📐 Resize Dimensions")
-    resize_width = st.number_input("Resize Width", min_value=32, max_value=1024, value=224, step=8)
-    resize_height = st.number_input("Resize Height", min_value=32, max_value=1024, value=224, step=8)
+    resize_width = st.number_input("Resize Width", min_value=32, max_value=1024, value=900, step=8)
+    resize_height = st.number_input("Resize Height", min_value=32, max_value=1024, value=900, step=8)
     
     if st.button("Update Threshold"):
         try:
