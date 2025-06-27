@@ -298,7 +298,7 @@ def main(args):
             model_info = {
                 "model_type": "PaDiM",
                 "backbone": args.backbone,
-                "input_shape": [1, 3, 256, 256],
+                "input_shape": [1, 3, 224, 224],
                 "output_shape": "variable",
                 "framework": "PyTorch",
                 "export_format": "ONNX",

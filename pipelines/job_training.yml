@@ -1,0 +1,78 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandJob.schema.json
+type: command
+
+description: Train a PaDiM anomaly detection model on images
+display_name: Train PaDiM Model
+experiment_name: padim_anomaly_detection_experiment
+
+code: ../src
+command: >
+  python train.py
+  --dataset_path ${{inputs.dataset_path}}
+  --model_data_path ${{outputs.model_output}}
+  --backbone ${{inputs.backbone}}
+  --batch_size ${{inputs.batch_size}}
+  --output_model ${{inputs.output_model}}
+  --feat_dim ${{inputs.feat_dim}}
+  --layer_indices ${{inputs.layer_indices}}
+  --evaluate_model
+  --mlflow_tracking_uri ${{inputs.mlflow_tracking_uri}}
+  --mlflow_experiment_name ${{inputs.mlflow_experiment_name}}
+  --run_name ${{inputs.run_name}}
+  --registered_model_name ${{inputs.registered_model_name}}
+  --test_dataset_path ${{inputs.test_dataset_path}}
+
+environment: azureml://registries/azureml/environments/pytorch-1.13-cuda11.7-py38/versions/10
+
+inputs:
+  dataset_path:
+    type: uri_folder
+    path: azureml:aml-anomavision-images:1  # ← from DATASET_NAME
+
+  mlflow_tracking_uri:
+    type: string
+    default: file:./mlruns  # Change if using remote tracking
+
+  mlflow_experiment_name:
+    type: string
+    default: padim_anomaly_detection
+
+  run_name:
+    type: string
+    default: padim_run
+
+  backbone:
+    type: string
+    default: resnet18
+    enum: [resnet18, wide_resnet50]
+
+  batch_size:
+    type: integer
+    default: 4
+
+  output_model:
+    type: string
+    default: padim_model.pt
+
+  feat_dim:
+    type: integer
+    default: 50
+
+  layer_indices:
+    type: string
+    default: "0"
+
+  registered_model_name:
+    type: string
+    default: PadimONNX
+
+  test_dataset_path:
+    type: uri_folder
+    path: azureml:aml-anomavision-images:1  # ← reuse or create test dataset separately
+
+outputs:
+  model_output:
+    type: uri_folder
+    path: azureml://datastores/datastorefruits/paths/models/padim/
+
+compute: azureml:compute-anomavision  # ← from COMPUTE_NAME
