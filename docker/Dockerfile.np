@@ -14,7 +14,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Copy requirements and install dependencies
 COPY ../requirements/requirements_np.txt .
-RUN pip install --no-cache-dir --user -r requirements_np.txt
+RUN pip install --no-cache-dir --user -r requirements_np.txt \
+    && find /root/.local -name "*.pyc" -delete \
+    && find /root/.local -name "__pycache__" -type d -exec rm -rf {} + \
+    && find /root/.local -name "*.pyo" -delete
 
 # Production stage
 FROM python:3.11-slim
@@ -58,3 +61,12 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 # Run the application
 CMD ["python", "-m", "uvicorn", "fastapi_app_np:app", "--host", "0.0.0.0", "--port", "8080"]
 
+
+
+# docker build --no-cache -t fastapi-anomavision:np -f docker/Dockerfile.np .
+
+# docker run -d `
+# --name fastapi-app `
+# -p 8080:8080 `
+# --restart unless-stopped `
+# fastapi-anomavision:np

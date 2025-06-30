@@ -11,14 +11,10 @@ import os
 from typing import Optional
 from contextlib import asynccontextmanager
 import static.anodet as anodet
-import matplotlib
-matplotlib.use('Agg')  # Use non-interactive backend
-import matplotlib.pyplot as plt
 
 
 # Global variables
 sess = None
-padim_model = None
 ANOMALY_THRESHOLD = 13.0
 RESIZE_SIZE = (224, 224)
 
@@ -30,14 +26,13 @@ async def load_model():
             sess = onnxruntime.InferenceSession("padim_model.onnx")
             print("ONNX model loaded successfully.")
         else:
-            raise FileNotFoundError("No model found. Please ensure 'padim_model.onnx' or 'distributions/padim_model.pt' exists.")
+            raise FileNotFoundError("No model found. Please ensure 'padim_model.onnx' ")
     except Exception as e:
         raise RuntimeError(f"Failed to load model: {e}")
 
 async def cleanup():
-    global sess, padim_model
+    global sess
     sess = None
-    padim_model = None
     print("Model cleanup completed.")
 
 @asynccontextmanager
@@ -81,7 +76,7 @@ async def root():
 
 @app.get("/health")
 async def health_check():
-    model_loaded = sess is not None or padim_model is not None
+    model_loaded = sess is not None 
     return {
         "status": "healthy" if model_loaded else "unhealthy",
         "model_type": "onnx" if sess else "pytorch" if padim_model else "none",
@@ -180,7 +175,7 @@ async def predict_anomaly(
     file: UploadFile = File(...),
     include_visualizations: bool = True
 ):
-    if sess is None and padim_model is None:
+    if sess is None:
         raise HTTPException(status_code=500, detail="No model loaded.")
 
     # Validate file type
@@ -220,15 +215,15 @@ async def predict_anomaly(
         is_anomaly = anomaly_score >= ANOMALY_THRESHOLD
         
         # Create anomaly map (normalized score map)
-        score_map_np = score_maps[0]
-        score_map_normalized = score_map_np.copy()
+        # score_map_np = score_maps[0]
+        # score_map_normalized = score_map_np.copy()
         
-        if score_map_np.max() - score_map_np.min() > 0:
-            score_map_normalized = (score_map_np - score_map_np.min()) / (score_map_np.max() - score_map_np.min())
-        else:
-            score_map_normalized = np.zeros_like(score_map_np)
+        # if score_map_np.max() - score_map_np.min() > 0:
+        #     score_map_normalized = (score_map_np - score_map_np.min()) / (score_map_np.max() - score_map_np.min())
+        # else:
+        #     score_map_normalized = np.zeros_like(score_map_np)
 
-        anomaly_map_base64 = numpy_to_base64(score_map_normalized,RESIZE_SIZE)
+        # anomaly_map_base64 = numpy_to_base64(score_map_normalized,RESIZE_SIZE)
 
         # Initialize visualization base64 strings
         boundary_image_base64 = ""
@@ -253,11 +248,11 @@ async def predict_anomaly(
             else:
                 print("❗ Heatmap image is None")
                 
-            if highlighted_image is not None:
-                highlighted_image_base64 = numpy_to_base64(highlighted_image,RESIZE_SIZE)
-                print("✓ Highlighted image created")
-            else:
-                print("❗ Highlighted image is None")
+            # if highlighted_image is not None:
+            #     highlighted_image_base64 = numpy_to_base64(highlighted_image,RESIZE_SIZE)
+            #     print("✓ Highlighted image created")
+            # else:
+            #     print("❗ Highlighted image is None")
 
         return PredictionResult(
             anomaly_score=anomaly_score,
@@ -309,12 +304,7 @@ async def get_model_info():
             "outputs": outputs,
             "threshold": ANOMALY_THRESHOLD
         }
-    elif padim_model is not None:
-        return {
-            "model_type": "pytorch",
-            "device": str(padim_model.device),
-            "threshold": ANOMALY_THRESHOLD
-        }
+        
     else:
         raise HTTPException(status_code=500, detail="No model loaded")
 
@@ -322,3 +312,5 @@ if __name__ == "__main__":
     # Use string import for proper reload functionality
     uvicorn.run("fastapi_app_np:app", host="0.0.0.0", port=8080, reload=False)
     
+
+

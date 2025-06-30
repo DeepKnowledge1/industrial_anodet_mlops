@@ -16,9 +16,5 @@ opencv-python-headless==4.8.1.78
 pillow==10.0.1
 scikit-image==0.22.0
 
-# Visualization and Progress
-matplotlib==3.7.2
-tqdm==4.66.1
-
 # Optional but Safe to Include
 scipy==1.11.3

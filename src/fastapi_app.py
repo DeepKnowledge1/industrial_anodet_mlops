@@ -7,7 +7,6 @@ from PIL import Image
 import io
 import base64
 import torch
-import cv2
 import os
 from typing import Optional
 from contextlib import asynccontextmanager

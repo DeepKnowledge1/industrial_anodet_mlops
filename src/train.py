@@ -1,23 +1,17 @@
-"""
-Enhanced training script with MLflow integration for PaDiM anomaly detection model.
-"""
 
 import os
 import AnomaVision.anodet as anodet
 import numpy as np
 import torch
-import cv2
 from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
 from AnomaVision.export import export_onnx
 import argparse
 import mlflow
 import mlflow.onnx
-import mlflow.pytorch
 import onnx
 from datetime import datetime
 import json
-import tempfile
 from sklearn.metrics import roc_auc_score, precision_recall_curve, auc
 import logging
 
@@ -253,7 +247,7 @@ def main(args):
             logger.info(f"Training completed in {training_time:.2f} seconds")
 
             # Save PyTorch model
-            pytorch_model_path = os.path.join(MODEL_DATA_PATH, args.output_model)
+            # pytorch_model_path = os.path.join(MODEL_DATA_PATH, args.output_model)
             # torch.save(padim, pytorch_model_path)
             
             # Log PyTorch model as artifact

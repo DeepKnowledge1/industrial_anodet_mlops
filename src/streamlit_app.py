@@ -5,12 +5,27 @@ import io
 import base64
 import json
 import time
+import sys
+import argparse
 
-# streamlit run src/streamlit_app.py
+
+# streamlit run src/streamlit_app.py -- --port 8080
+
+
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--port", type=int, default=8080, help="Port of the FastAPI server")
+    parser.add_argument("--host", type=str, default="localhost", help="Host of the FastAPI server")
+    return parser.parse_known_args()[0]
+
 
 
 # Configuration
-FASTAPI_URL = "http://localhost:8080"
+args = parse_args()
+FASTAPI_URL = f"http://{args.host}:{args.port}"
+
+
 PREDICT_ENDPOINT = f"{FASTAPI_URL}/predict"
 HEALTH_ENDPOINT = f"{FASTAPI_URL}/health"
 CONFIG_ENDPOINT = f"{FASTAPI_URL}/config"
@@ -99,7 +114,7 @@ with st.sidebar:
     resize_width = st.number_input("Resize Width", min_value=32, max_value=1024, value=900, step=8)
     resize_height = st.number_input("Resize Height", min_value=32, max_value=1024, value=900, step=8)
 
-    if st.button("Update Threshold"):
+    if st.button("Update Params"):
         try:
             config_response = requests.post(
                 CONFIG_ENDPOINT,

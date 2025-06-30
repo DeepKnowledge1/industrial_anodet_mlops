@@ -1,4 +1,4 @@
-
+<!-- 
 
 # Build the Docker image from the project root
 # docker build -f docker/Dockerfile -t fastapi-anomavision:latest .
@@ -52,4 +52,4 @@ docker run -d `
 # docker images fastapi-anomavision:latest
 
 # Clean up unused images
-# docker image prune -f
+# docker image prune -f -->

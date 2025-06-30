@@ -1,5 +1,4 @@
 # Multi-stage Dockerfile for FastAPI
-# Place this file in: docker/Dockerfile
 
 # Build stage
 FROM python:3.11-slim as builder
