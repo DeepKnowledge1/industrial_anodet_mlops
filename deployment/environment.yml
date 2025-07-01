@@ -1,4 +1,4 @@
-name: animavision-mlops
+name: mlops_anomavision_env
 channels:
   - defaults
   - conda-forge

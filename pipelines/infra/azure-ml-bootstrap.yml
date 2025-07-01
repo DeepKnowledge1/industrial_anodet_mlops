@@ -143,39 +143,39 @@ stages:
     #         --namespace azureml
 
 
-    # - task: AzureCLI@2
-    #   displayName: 'Step 7 - Create Azure ML Compute Cluster'
-    #   inputs:
-    #     azureSubscription: mlops_anomaly_detection
-    #     scriptType: ps
-    #     scriptLocation: inlineScript
-    #     inlineScript: |
-    #       az ml compute create `
-    #         --name $(COMPUTE_NAME) `
-    #         --type AmlCompute `
-    #         --size Standard_DS2_v2 `
-    #         --min-instances 0 `
-    #         --max-instances 1 `
-    #         --idle-time-before-scale-down 120 `
-    #         --resource-group $(RESOURCE_GROUP) `
-    #         --workspace-name $(WORKSPACE)
+    - task: AzureCLI@2
+      displayName: 'Step 7 - Create Azure ML Compute Cluster'
+      inputs:
+        azureSubscription: mlops_anomaly_detection
+        scriptType: ps
+        scriptLocation: inlineScript
+        inlineScript: |
+          az ml compute create `
+            --name $(COMPUTE_NAME) `
+            --type AmlCompute `
+            --size Standard_DS2_v2 `
+            --min-instances 0 `
+            --max-instances 1 `
+            --idle-time-before-scale-down 120 `
+            --resource-group $(RESOURCE_GROUP) `
+            --workspace-name $(WORKSPACE)
 
-    # - task: AzureCLI@2
-    #   displayName: 'Step 8 - Upload Training Images to ML Dataset'
-    #   inputs:
-    #     azureSubscription: mlops_anomaly_detection
-    #     scriptType: ps
-    #     scriptLocation: inlineScript
-    #     inlineScript: |
-    #       $path = "$(DATA_ANO_DIR)"
-    #       Write-Host "Uploading from: $path"
-    #       az ml data create `
-    #         --name anomaly-images `
-    #         --type uri_folder `
-    #         --path $path `
-    #         --description "Training + test + ground truth images for anomaly detection" `
-    #         --workspace-name "$(WORKSPACE)" `
-    #         --resource-group "$(RESOURCE_GROUP)"
+    - task: AzureCLI@2
+      displayName: 'Step 8 - Upload Training Images to ML Dataset'
+      inputs:
+        azureSubscription: mlops_anomaly_detection
+        scriptType: ps
+        scriptLocation: inlineScript
+        inlineScript: |
+          $path = "$(DATA_ANO_DIR)"
+          Write-Host "Uploading from: $path"
+          az ml data create `
+            --name anomaly-images `
+            --type uri_folder `
+            --path $path `
+            --description "Training + test + ground truth images for anomaly detection" `
+            --workspace-name "$(WORKSPACE)" `
+            --resource-group "$(RESOURCE_GROUP)"
 
 
     - task: AzureCLI@2
@@ -185,10 +185,17 @@ stages:
         scriptType: ps
         scriptLocation: inlineScript
         inlineScript: |
-          az ml environment create `
-            --name mlops_anomavision `
-            --image mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:latest `
-            --conda-file "$(Build.SourcesDirectory)/deployment/environment.yml" `
-            --workspace-name $(WORKSPACE) `
-            --resource-group $(RESOURCE_GROUP)
-          
+          # az ml environment create `
+          #   --name mlops_anomavision `
+          #   --image mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:latest `
+          #   --conda-file "$(Build.SourcesDirectory)/deployment/environment.yml" `
+          #   --workspace-name $(WORKSPACE) `
+          #   --resource-group $(RESOURCE_GROUP)          
+          az ml environment create  `
+            --name mlops_anomavision_env  `
+            --version 1  `
+            --build-context ./deployment  `
+            --dockerfile-path Dockerfile  `
+            --workspace-name aml-anomavision-ws  `
+            --resource-group rg-ml-anomavision-dev  `
+            --description "AnimaVision MLOps Environment v1 with libGL"
