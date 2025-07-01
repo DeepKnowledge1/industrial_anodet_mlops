@@ -35,3 +35,6 @@ dependencies:
       # Serialization and Utilities
       - joblib==1.4.0
       - pyyaml==6.0.1
+      
+      # Development dependencies
+      - pytest=8.2.*
