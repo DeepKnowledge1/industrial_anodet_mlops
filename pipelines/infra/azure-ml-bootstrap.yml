@@ -20,6 +20,8 @@ stages:
     - checkout: self
       submodules: true
       persistCredentials: true
+      fetchDepth: 0  # Ensures full history, which submodules sometimes need
+
 
 
     # - task: AzureCLI@2
