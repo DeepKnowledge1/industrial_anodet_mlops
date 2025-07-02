@@ -191,4 +191,4 @@ stages:
             --build-context "$(Build.SourcesDirectory)/environment"  `
             --dockerfile-path Dockerfile  `
             --workspace-name $(WORKSPACE) `
-            --resource-group $(RESOURCE_GROUP) `         
+            --resource-group $(RESOURCE_GROUP)
