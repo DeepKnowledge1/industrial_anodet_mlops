@@ -19,6 +19,8 @@ stages:
     steps:
     - checkout: self
       submodules: true
+      persistCredentials: true
+
 
     # - task: AzureCLI@2
     #   displayName: 'Step 0 - Install Azure ML extension'
