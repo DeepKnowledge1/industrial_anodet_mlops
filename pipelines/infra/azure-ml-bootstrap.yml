@@ -27,37 +27,37 @@ stages:
       displayName: 'Manually update submodules'
 
 
-    # - task: AzureCLI@2
-    #   displayName: 'Step 0 - Install Azure ML extension'
-    #   inputs:
-    #     azureSubscription: mlops_anomaly_detection
-    #     scriptType: ps
-    #     scriptLocation: inlineScript
-    #     inlineScript: |
-    #       az extension add --name ml
+    - task: AzureCLI@2
+      displayName: 'Step 0 - Install Azure ML extension'
+      inputs:
+        azureSubscription: mlops_anomaly_detection
+        scriptType: ps
+        scriptLocation: inlineScript
+        inlineScript: |
+          az extension add --name ml
 
-    # - task: AzureCLI@2
-    #   displayName: 'Step 1 - Create Resource Group'
-    #   inputs:
-    #     azureSubscription: mlops_anomaly_detection
-    #     scriptType: ps
-    #     scriptLocation: inlineScript
-    #     inlineScript: |
-    #       az group create `
-    #         --name $(RESOURCE_GROUP) `
-    #         --location $(LOCATION)
+    - task: AzureCLI@2
+      displayName: 'Step 1 - Create Resource Group'
+      inputs:
+        azureSubscription: mlops_anomaly_detection
+        scriptType: ps
+        scriptLocation: inlineScript
+        inlineScript: |
+          az group create `
+            --name $(RESOURCE_GROUP) `
+            --location $(LOCATION)
 
-    # - task: AzureCLI@2
-    #   displayName: 'Step 2 - Create Azure ML Workspace'
-    #   inputs:
-    #     azureSubscription: mlops_anomaly_detection
-    #     scriptType: ps
-    #     scriptLocation: inlineScript
-    #     inlineScript: |
-    #       az ml workspace create `
-    #         --name $(WORKSPACE) `
-    #         --resource-group $(RESOURCE_GROUP) `
-    #         --location $(LOCATION)
+    - task: AzureCLI@2
+      displayName: 'Step 2 - Create Azure ML Workspace'
+      inputs:
+        azureSubscription: mlops_anomaly_detection
+        scriptType: ps
+        scriptLocation: inlineScript
+        inlineScript: |
+          az ml workspace create `
+            --name $(WORKSPACE) `
+            --resource-group $(RESOURCE_GROUP) `
+            --location $(LOCATION)
 
     # - task: AzureCLI@2
     #   displayName: 'Step 2 - Create & Uplaod ssl_cert and ssl_key'
@@ -169,35 +169,35 @@ stages:
     #         --resource-group $(RESOURCE_GROUP) `
     #         --workspace-name $(WORKSPACE)
 
-    # - task: AzureCLI@2
-    #   displayName: 'Step 8 - Upload Training Images to ML Dataset'
-    #   inputs:
-    #     azureSubscription: mlops_anomaly_detection
-    #     scriptType: ps
-    #     scriptLocation: inlineScript
-    #     inlineScript: |
-    #       $path = "$(DATA_ANO_DIR)"
-    #       Write-Host "Uploading from: $path"
-    #       az ml data create `
-    #         --name anomaly-images `
-    #         --type uri_folder `
-    #         --path $path `
-    #         --description "Training + test + ground truth images for anomaly detection" `
-    #         --workspace-name "$(WORKSPACE)" `
-    #         --resource-group "$(RESOURCE_GROUP)"
+    - task: AzureCLI@2
+      displayName: 'Step 8 - Upload Training Images to ML Dataset'
+      inputs:
+        azureSubscription: mlops_anomaly_detection
+        scriptType: ps
+        scriptLocation: inlineScript
+        inlineScript: |
+          $path = "$(DATA_ANO_DIR)"
+          Write-Host "Uploading from: $path"
+          az ml data create `
+            --name anomaly-images `
+            --type uri_folder `
+            --path $path `
+            --description "Training + test + ground truth images for anomaly detection" `
+            --workspace-name "$(WORKSPACE)" `
+            --resource-group "$(RESOURCE_GROUP)"
 
 
-    # - task: AzureCLI@2
-    #   displayName: 'Step 9 - Register Training Environment'
-    #   inputs:
-    #     azureSubscription: mlops_anomaly_detection
-    #     scriptType: ps
-    #     scriptLocation: inlineScript
-    #     inlineScript: |
-    #       az ml environment create  `
-    #         --name anomavision_env  `
-    #         --version 1  `
-    #         --build-context "$(Build.SourcesDirectory)/environment"  `
-    #         --dockerfile-path Dockerfile  `
-    #         --workspace-name $(WORKSPACE) `
-    #         --resource-group $(RESOURCE_GROUP)
+    - task: AzureCLI@2
+      displayName: 'Step 9 - Register Training Environment'
+      inputs:
+        azureSubscription: mlops_anomaly_detection
+        scriptType: ps
+        scriptLocation: inlineScript
+        inlineScript: |
+          az ml environment create  `
+            --name anomavision_env  `
+            --version 1  `
+            --build-context "$(Build.SourcesDirectory)/environment"  `
+            --dockerfile-path Dockerfile  `
+            --workspace-name $(WORKSPACE) `
+            --resource-group $(RESOURCE_GROUP)
