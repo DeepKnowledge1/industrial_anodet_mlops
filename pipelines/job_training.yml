@@ -11,13 +11,7 @@ command: >
   --dataset_path ${{inputs.dataset_path}}
   --test_dataset_path ${{inputs.test_dataset_path}}
 
-environment: azureml:mlops_anomavision_env:3
-
-# environment:
-#   docker:
-#     build:
-#       path: .
-#       dockerfile_path: Dockerfile
+environment: azureml:anomavision_env:2
 
 
 inputs:
