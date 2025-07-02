@@ -22,6 +22,9 @@ stages:
       persistCredentials: true
       fetchDepth: 0  # Ensures full history, which submodules sometimes need
 
+    - script: |
+        git submodule update --init --recursive
+      displayName: 'Manually update submodules'
 
 
     # - task: AzureCLI@2
