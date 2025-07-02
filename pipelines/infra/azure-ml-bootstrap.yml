@@ -185,16 +185,10 @@ stages:
         scriptType: ps
         scriptLocation: inlineScript
         inlineScript: |
-          # az ml environment create `
-          #   --name mlops_anomavision `
-          #   --image mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:latest `
-          #   --conda-file "$(Build.SourcesDirectory)/deployment/environment.yml" `
-          #   --workspace-name $(WORKSPACE) `
-          #   --resource-group $(RESOURCE_GROUP)          
           az ml environment create  `
-            --name mlops_anomavision_env  `
+            --name anomavision_env  `
             --version 1  `
-            --build-context "$(Build.SourcesDirectory)/deployment"  `
+            --build-context "$(Build.SourcesDirectory)/environment"  `
             --dockerfile-path Dockerfile  `
             --workspace-name $(WORKSPACE) `
             --resource-group $(RESOURCE_GROUP) `         
