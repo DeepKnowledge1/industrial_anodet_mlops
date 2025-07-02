@@ -192,4 +192,3 @@ stages:
             --dockerfile-path Dockerfile  `
             --workspace-name $(WORKSPACE) `
             --resource-group $(RESOURCE_GROUP) `         
-            --description "AnimaVision MLOps Environment v1 with libGL"
