@@ -15,6 +15,11 @@ import json
 from sklearn.metrics import roc_auc_score, precision_recall_curve, auc
 import logging
 
+
+os.environ.pop("MLFLOW_RUN_ID", None)  # Remove Azure-injected env var
+
+
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -57,10 +62,10 @@ def parse_args():
                         help='Name for the registered model in MLflow Model Registry.')
 
     # Evaluation arguments
-    parser.add_argument('--test_dataset_path', type=str, default="D:/01-DATA/",
+    parser.add_argument('--test_dataset_path', type=str, default="D:/01-DATA/bottle",
                         help='Path to test dataset for evaluation. If not provided, will use dataset_path/test.')
 
-    parser.add_argument('--evaluate_model', action='store_false',
+    parser.add_argument('--evaluate_model', action='store_true',
                         help='Whether to evaluate the model after training.')
 
     return parser.parse_args()
@@ -200,10 +205,14 @@ def main(args):
     # Load test dataset if evaluation is requested
     test_dataloader = None
     if args.evaluate_model:
+        
+        test_path = os.path.dirname(DATASET_PATH)
+        class_name = os.path.basename(DATASET_PATH)
+        
         test_path = args.test_dataset_path or DATASET_PATH
         try:
             # Try to load as MVTec dataset for evaluation
-            test_dataset = anodet.MVTecDataset(test_path, class_name='bottle', is_train=False)
+            test_dataset = anodet.MVTecDataset(test_path, class_name=class_name, is_train=False)
             test_dataloader = DataLoader(test_dataset, batch_size=args.batch_size)
             logger.info(f"Number of test images: {len(test_dataset)}")
         except Exception as e:
@@ -211,7 +220,12 @@ def main(args):
             args.evaluate_model = False
 
     # Start MLflow run
-    with mlflow.start_run(run_name=args.run_name, experiment_id=experiment_id):
+    if experiment_id:
+        mlflow_run_ctx = mlflow.start_run(run_name=args.run_name, experiment_id=experiment_id)
+    else:
+        mlflow_run_ctx = mlflow.start_run(run_name=args.run_name)
+
+    with mlflow_run_ctx:
         try:
             # Log parameters
             mlflow.log_param("backbone", args.backbone)

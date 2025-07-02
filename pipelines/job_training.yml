@@ -7,21 +7,22 @@ experiment_name: padim_anomaly_detection_experiment
 
 code: ../src
 command: >
-  python train.py
+  conda run -n anomavision_env python train.py
   --dataset_path ${{inputs.dataset_path}}
   --test_dataset_path ${{inputs.test_dataset_path}}
 
-environment: azureml:anomavision_env:2
+environment: azureml:anomavision_env:1
+
 
 
 inputs:
   dataset_path:
     type: uri_folder
-    path: azureml://datastores/workspaceblobstore/paths/LocalUpload/fa1869bfbda583ff5928f0e99c041ecc/bottle  # ← from DATASET_NAME
+    path: azureml:anomaly-images:1  # ← from DATASET_NAME
 
   test_dataset_path:
     type: uri_folder
-    path: azureml://datastores/workspaceblobstore/paths/LocalUpload/fa1869bfbda583ff5928f0e99c041ecc/bottle  # ← reuse or create test dataset separately
+    path: azureml:anomaly-images:1
 
 outputs:
   model_output:
