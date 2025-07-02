@@ -10,6 +10,8 @@ command: >
   conda run -n anomavision_env python train.py
   --dataset_path ${{inputs.dataset_path}}
   --test_dataset_path ${{inputs.test_dataset_path}}
+  --output_model ${{outputs.model_output}}
+
 
 environment: azureml:anomavision_env:1
 
@@ -27,6 +29,7 @@ inputs:
 outputs:
   model_output:
     type: uri_folder
-    path: azureml://datastores/workspaceblobstore/paths/models/anomavision/
-
+    mode: rw_mount
+    # path: azureml://datastores/workspaceblobstore/paths/models/anomavision/    
+    
 compute: azureml:compute-anomavision  # ← from COMPUTE_NAME

@@ -32,15 +32,15 @@ def parse_args():
 
     parser.add_argument('--model_data_path', type=str, default='./distributions/',
                         help='Directory to save model distributions and ONNX file.')
-
+    parser.add_argument('--output_model', type=str, default='model_output', help='Output folder for model export')
     parser.add_argument('--backbone', type=str, choices=['resnet18', 'wide_resnet50'], default='resnet18',
                         help='Backbone network to use for feature extraction.')
 
     parser.add_argument('--batch_size', type=int, default=2,
                         help='Batch size used during training and inference.')
 
-    parser.add_argument('--output_model', type=str, default='padim_model.pt',
-                        help='Filename to save the PT model.')
+    # parser.add_argument('--output_model', type=str, default='padim_model.pt',
+    #                     help='Filename to save the PT model.')
 
     parser.add_argument('--layer_indices', nargs='+', type=int, default=[0],
                         help='List of layer indices to extract features from. Default: [0].')
@@ -271,6 +271,16 @@ def main(args):
             logger.info("Exporting model to ONNX...")
             onnx_model_path = os.path.join(MODEL_DATA_PATH, "padim_model.onnx")
             export_onnx(padim, onnx_model_path)
+
+            # Save a copy of the ONNX model to AzureML's output folder
+            try:
+                os.makedirs(args.output_model, exist_ok=True)
+                azure_output_path = os.path.join(args.output_model, "padim_model.onnx")
+                import shutil
+                shutil.copyfile(onnx_model_path, azure_output_path)
+                logger.info(f"Saved model to AzureML output folder: {azure_output_path}")
+            except Exception as e:
+                logger.warning(f"Could not copy model to AzureML output: {e}")
             
             # Load ONNX model for MLflow logging
             onnx_model = onnx.load(onnx_model_path)
