@@ -7,38 +7,13 @@ pool:
 variables:
   - group: mlops-azure-components
 
-# jobs:
-#   - job: BuildAndTest
-#     displayName: 'Build and Test'
-#     steps:
-#       - template: templates/setup.yml
-#       - template: templates/install_dependencies.yml
-#       - template: templates/test.yml
-#       # - template: templates/build.yml
-#       # - template: templates/publish.yml
+jobs:
+  - job: BuildAndTest
+    displayName: 'Build and Test'
+    steps:
+      - template: templates/setup.yml
+      - template: templates/install_dependencies.yml
+      - template: templates/test.yml
+      # - template: templates/build.yml
+      # - template: templates/publish.yml
 
-
-
-steps:
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: '3.11.0'  # Or match your expected Python version
-      addToPath: true
-
-  - script: |
-      python -m pip install --upgrade pip
-      pip install -r requirements.txt
-    displayName: 'Install dependencies'
-
-  - script: |
-      if not exist junit mkdir junit
-      echo Running tests...
-      call pytest tests -v --doctest-modules --junitxml=junit/test-results.xml --capture=no
-      echo Pytest finished with exit code %ERRORLEVEL%
-    displayName: 'Run pytest'
-
-  - task: PublishTestResults@2
-    displayName: 'Publish Test Results'
-    inputs:
-      testResultsFiles: '**/test-results.xml'
-    condition: succeededOrFailed()
