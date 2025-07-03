@@ -10,8 +10,9 @@ import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "src")))
 
-import  AnomaVision.anodet as anodet  # or whatever module you're testing
+# import  AnomaVision.anodet as anodet  # or whatever module you're testing
 
+from AnomaVision.anodet import Padim
 
 
 @pytest.fixture
@@ -28,14 +29,14 @@ def dummy_dataloader():
     ("wide_resnet50", sum([255, 512, 1024, 2048]))
 ])
 def test_channel_indices_dimension(backbone, expected_total_channels):
-    model = anodet.Padim(backbone=backbone, device=torch.device("cpu"), layer_indices=[0, 1, 2, 3], feat_dim=1000)
+    model = Padim(backbone=backbone, device=torch.device("cpu"), layer_indices=[0, 1, 2, 3], feat_dim=1000)
     assert model.channel_indices.numel() <= expected_total_channels
     assert model.channel_indices.ndim == 1
 
 
 @pytest.mark.parametrize("backbone", ["resnet18", "wide_resnet50"])
 def test_fit_and_predict_all_layers(dummy_dataloader, backbone):
-    model = anodet.Padim(backbone=backbone, device=torch.device("cpu"), layer_indices=[0, 1, 2, 3], feat_dim=100)
+    model = Padim(backbone=backbone, device=torch.device("cpu"), layer_indices=[0, 1, 2, 3], feat_dim=100)
     model.fit(dummy_dataloader)
 
     assert model.mahalanobisDistance is not None
@@ -50,7 +51,7 @@ def test_fit_and_predict_all_layers(dummy_dataloader, backbone):
 
 @pytest.mark.parametrize("backbone", ["resnet18", "wide_resnet50"])
 def test_forward_and_evaluate(dummy_dataloader, backbone):
-    model = anodet.Padim(backbone=backbone, device=torch.device("cpu"), layer_indices=[0, 1, 2, 3], feat_dim=128)
+    model = Padim(backbone=backbone, device=torch.device("cpu"), layer_indices=[0, 1, 2, 3], feat_dim=128)
     model.fit(dummy_dataloader)
 
     batch = next(iter(dummy_dataloader))[0]
