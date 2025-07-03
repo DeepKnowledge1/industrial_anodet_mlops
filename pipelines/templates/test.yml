@@ -13,7 +13,7 @@ steps:
       echo "Running tests..."
       # Add the current working directory (which is the root of your repo) to PYTHONPATH
       # This ensures that 'src' is discoverable as a package.
-      export PYTHONPATH=$(Build.SourcesDirectory):$PYTHONPATH
+      export PYTHONPATH=$(Build.SourcesDirectory)/src:$PYTHONPATH
       poetry run python -m pytest tests/test_anomavision.py -v --doctest-modules --junitxml=junit/test-results.xml
     displayName: 'Run pytest'
     workingDirectory: $(Build.SourcesDirectory)
