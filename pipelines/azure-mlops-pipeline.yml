@@ -15,9 +15,9 @@ jobs:
       # 1. Set up the desired Python version FIRST.
       # This ensures all following steps use Python 3.11.
       - task: UsePythonVersion@0
-        displayName: 'Use Python 3.11'
+        displayName: 'Use Python 3.11.0'
         inputs:
-          versionSpec: '3.11' # You can use '3.11' instead of '3.11.0'
+          versionSpec: '3.11.0' # You can use '3.11' instead of '3.11.0'
           addToPath: true
 
       # 2. Now, call your templates. The Python version is already active.
