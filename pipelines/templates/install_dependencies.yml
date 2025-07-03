@@ -1,5 +1,5 @@
 steps:
   - script: |
       poetry lock
-      poetry install --only main
+      poetry install
     displayName: 'Install poetry dependencies'
