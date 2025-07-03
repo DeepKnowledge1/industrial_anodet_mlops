@@ -6,18 +6,20 @@ steps:
   - script: |
       echo "--- Current Directory ---"
       cd
+      echo "--- Python Interpreter Path ---"
+      echo "$(Python.Interpreter)"
       echo "--- Python Version ---"
-      python --version
+      "$(Python.Interpreter)" --version
       echo "--- Pip Version ---"
-      python -m pip --version
+      "$(Python.Interpreter)" -m pip --version
       echo "--- Installed Packages ---"
-      python -m pip list
+      "$(Python.Interpreter)" -m pip list
     displayName: 'Debug: Check Environment (Windows)'
     workingDirectory: $(Build.SourcesDirectory)
 
   - script: |
       echo "Running tests..."
-      python -m pytest tests/test_anomavision.py -v --doctest-modules --junitxml=junit/test-results.xml
+      "$(Python.Interpreter)" -m pytest tests/test_anomavision.py -v --doctest-modules --junitxml=junit/test-results.xml
     displayName: 'Run pytest'
     workingDirectory: $(Build.SourcesDirectory)
 
