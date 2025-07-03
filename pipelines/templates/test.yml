@@ -1,14 +1,14 @@
 steps:
 
-  - script: |
-      echo Current dir: %cd%
-      dir
-      echo Running tests...
-      pytest tests -v --doctest-modules --junitxml=junit/test-results.xml || exit /b %ERRORLEVEL%
-      echo Pytest finished with exit code %ERRORLEVEL%
-    displayName: 'Run pytest'
-    continueOnError: false
-    workingDirectory: $(Build.SourcesDirectory)
+- script: |
+    echo Running tests...
+    pytest tests -v --doctest-modules --junitxml=junit/test-results.xml
+    set EXITCODE=%ERRORLEVEL%
+    echo Pytest finished with exit code %EXITCODE%
+    exit /b %EXITCODE%
+  displayName: 'Run pytest'
+  continueOnError: false
+  workingDirectory: $(Build.SourcesDirectory)
     
 
   - task: PublishTestResults@2
