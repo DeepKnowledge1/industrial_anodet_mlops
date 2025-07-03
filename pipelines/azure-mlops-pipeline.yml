@@ -46,11 +46,11 @@ stages:
         steps:
           - template: templates/test.yml
 
-  # - stage: DataValidation
-  #   dependsOn: RunTests
-  #   displayName: 'Data Validation'
-  #   jobs:
-  #     - template: jobs/data-validation-job.yml
+  - stage: DataValidation
+    dependsOn: RunTests
+    displayName: 'Data Validation'
+    jobs:
+      - template: templates/data_validation.yml
 
 
 
