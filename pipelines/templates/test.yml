@@ -1,8 +1,8 @@
 steps:
   - script: |
-      if not exist junit mkdir junit
       echo Running tests...
-      pytest tests -v --doctest-modules --junitxml=junit/test-results.xml
+      pytest tests -v --doctest-modules --junitxml=junit/test-results.xml > pytest_output.log 2>&1
+      type pytest_output.log
       echo Pytest finished with exit code %ERRORLEVEL%
     displayName: 'Run pytest'
     continueOnError: true  # Critical to avoid stopping the pipeline
