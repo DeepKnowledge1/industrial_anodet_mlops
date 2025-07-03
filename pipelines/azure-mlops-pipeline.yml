@@ -30,11 +30,26 @@ stages:
         versionSpec: '3.11.0'
         addToPath: true
 
+    # Install Poetry on Windows
     - script: |
-        poetry lock
+        python -m pip install --upgrade pip
+        python -m pip install poetry
+        poetry --version
+      displayName: 'Install Poetry'
+
+    # Configure Poetry
+    - script: |
+        poetry config virtualenvs.create true
+        poetry config virtualenvs.in-project true
+        poetry config --list
+      displayName: 'Configure Poetry'
+
+    # Install dependencies
+    - script: |
         poetry install --only main
       displayName: 'Install Poetry dependencies'
 
+    # Run tests
     - script: |
         poetry run pytest tests --doctest-modules --junitxml=junit/test-results.xml
       displayName: 'Run pytest'
