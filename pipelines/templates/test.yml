@@ -1,8 +1,11 @@
 steps:
- 
+
   - script: |
       echo Running tests...
+      set PYTHONPATH=%PYTHONPATH%;$(Build.SourcesDirectory)\src
       pytest tests -v -rA --doctest-modules --junitxml=junit/test-results.xml
+      echo Pytest returned error code: %ERRORLEVEL%
+      exit /b %ERRORLEVEL%
     displayName: 'Run pytest'
     continueOnError: false
     workingDirectory: $(Build.SourcesDirectory)
