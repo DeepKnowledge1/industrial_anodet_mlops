@@ -8,9 +8,12 @@ steps:
     workingDirectory: $(Build.SourcesDirectory)
     continueOnError: false
 
-  # Run pytest using the python interpreter
+  # Set PYTHONPATH to include the src directory and run pytest
   - script: |
       echo "Running tests..."
+      # Add the current working directory (which is the root of your repo) to PYTHONPATH
+      # This ensures that 'src' is discoverable as a package.
+      export PYTHONPATH=$(Build.SourcesDirectory):$PYTHONPATH
       poetry run python -m pytest tests/test_anomavision.py -v --doctest-modules --junitxml=junit/test-results.xml
     displayName: 'Run pytest'
     workingDirectory: $(Build.SourcesDirectory)
