@@ -11,6 +11,7 @@ steps:
   # Set PYTHONPATH to include the src directory and run pytest
   - script: |
       echo "Running tests..."
+      set PYTHONPATH=$(Build.SourcesDirectory)\src
       poetry run pytest test_anomavision.py -v --doctest-modules --junitxml=junit/test-results.xml
     displayName: 'Run pytest'
     workingDirectory: $(Build.SourcesDirectory)
