@@ -1,7 +1,6 @@
 
 # File: pipelines/templates/data_validation.yml
 steps:
-  - checkout: self
   - task: AzureCLI@2
     displayName: 'Data Validation'
     inputs:
@@ -12,3 +11,5 @@ steps:
         az ml job create --file "$(Build.SourcesDirectory)/jobs/data-validation-job.yml" `
           --resource-group $(RESOURCE_GROUP) `
           --workspace-name $(WORKSPACE)
+
+
