@@ -1,5 +1,6 @@
 steps:
   - script: |
+      if not exist junit mkdir junit
       pytest tests -v --doctest-modules --junitxml=junit/test-results.xml
     displayName: 'Run pytest'
 
