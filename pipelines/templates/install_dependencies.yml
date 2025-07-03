@@ -1,12 +1,14 @@
+
 steps:
   - script: |
-      echo "--- Upgrading Pip ---"
-      "$(Python.Interpreter)" -m pip install --upgrade pip
+      where python
+      python --version
+      pip --version
+    displayName: 'Check Python & Pip Paths'
 
-      echo "--- Installing packages from requirements.txt ---"
-      "$(Python.Interpreter)" -m pip install -r requirements.txt
-
-      echo "--- Installing pytest ---"
-      "$(Python.Interpreter)" -m pip install pytest pytest-azurepipelines
-    displayName: 'Install Dependencies and Pytest'
+  - script: |
+      python -m pip install --upgrade pip
+      pip install -r requirements.txt
+      pip show numpy
+    displayName: 'Install dependencies'
     workingDirectory: $(Build.SourcesDirectory)/requirements
