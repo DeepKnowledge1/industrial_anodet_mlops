@@ -1,0 +1,6 @@
+# templates/update_submodules.yml
+
+steps:
+  - script: |
+      git submodule update --init --recursive
+    displayName: 'Manually update submodules'

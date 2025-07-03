@@ -19,16 +19,10 @@ stages:
           - checkout: self
             submodules: true
             persistCredentials: true
-            fetchDepth: 0  # Ensures full history, which submodules sometimes need
+            fetchDepth: 0
 
-          - script: |
-              git submodule update --init --recursive
-            displayName: 'Manually update submodules'
-
-          - task: UsePythonVersion@0
-            displayName: 'Use Python 3.11.0'
-            inputs:
-              versionSpec: '3.11.0'
+          - template: templates/update_submodules.yml
+          - template: templates/use_python_3_11_0.yml
 
           - template: templates/install_dependencies.yml
           - template: templates/test.yml

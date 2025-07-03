@@ -1,0 +1,7 @@
+# templates/use_python_3_11_0.yml
+
+steps:
+  - task: UsePythonVersion@0
+    displayName: 'Use Python 3.11.0'
+    inputs:
+      versionSpec: '3.11.0'
