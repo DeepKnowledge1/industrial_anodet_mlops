@@ -6,15 +6,15 @@ import numpy as np
 # import src.AnomaVision.anodet as anodet
 
 
-# import sys
-# import os
-# project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "src"))
-# if project_root not in sys.path:
-#     sys.path.insert(0, project_root)
-#     print("********************* ",project_root)
+import sys
+import os
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "src"))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+    print("********************* ",project_root)
 
 
-from src.AnomaVision.anodet import Padim
+from AnomaVision.anodet import Padim
 
 
 @pytest.fixture

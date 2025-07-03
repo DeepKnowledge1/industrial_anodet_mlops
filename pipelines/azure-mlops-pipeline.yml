@@ -12,6 +12,15 @@ jobs:
     pool:
       name: Default
     steps:
+      - checkout: self
+        submodules: true
+        persistCredentials: true
+        fetchDepth: 0  # Ensures full history, which submodules sometimes need
+
+      - script: |
+          git submodule update --init --recursive
+        displayName: 'Manually update submodules'
+
       # 1. Set up the desired Python version FIRST.
       # This ensures all following steps use Python 3.11.
       - task: UsePythonVersion@0
