@@ -1,6 +1,5 @@
 steps:
   - script: |
       poetry lock
-      poetry add pytest
-      poetry install --only main
+      poetry install --with dev
     displayName: 'Install poetry dependencies'
