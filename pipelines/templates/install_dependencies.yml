@@ -4,6 +4,10 @@ steps:
   - script: |
       poetry lock
       poetry install
-      
+
     displayName: 'Install dependencies'
-    workingDirectory: $(Build.SourcesDirectory)/requirements
+
+
+
+
+
