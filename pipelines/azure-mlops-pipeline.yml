@@ -33,7 +33,7 @@ steps:
   - script: |
       if not exist junit mkdir junit
       echo Running tests...
-      call pytest tests -v --doctest-modules --junitxml=junit/test-results.xml
+      call pytest tests -v --doctest-modules --junitxml=junit/test-results.xml --capture=no
       echo Pytest finished with exit code %ERRORLEVEL%
     displayName: 'Run pytest'
 
