@@ -1,0 +1,46 @@
+
+trigger:
+  - main  # Adjust this as needed
+
+pool:
+  name: Default
+
+variables:
+  - group: mlops-azure-components
+
+stages:
+  - stage: Setup
+    displayName: 'Setup Python & Poetry'
+    jobs:
+      - job: Setup
+        steps:
+          - template: templates/setup.yml
+
+  - stage: Dependencies
+    displayName: 'Install Dependencies'
+    jobs:
+      - job: Install
+        steps:
+          - template: templates/install_dependencies.yml
+
+  - stage: Test
+    displayName: 'Run Tests'
+    jobs:
+      - job: Test
+        steps:
+          - template: templates/test.yml
+
+  - stage: Build
+    displayName: 'Build Package'
+    jobs:
+      - job: Build
+        steps:
+          - template: templates/build.yml
+
+  # - stage: Publish
+  #   displayName: 'Publish Artifacts'
+  #   jobs:
+  #     - job: Publish
+  #       steps:
+  #         - template: templates/publish.yml
+

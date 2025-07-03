@@ -56,5 +56,5 @@ Thumbs.db
 mlruns/
 distributions/
 *.pt
-pipelines/azure-mlops-pipeline.yml
+pipelines/azure-mlops-pipeline - Copy.yml
 junit/
