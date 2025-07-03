@@ -18,7 +18,7 @@ jobs:
         displayName: 'Use Python 3.11.0'
         inputs:
           versionSpec: '3.11.0' # You can use '3.11.0' instead of '3.11.0'
-          addToPath: true
+          # addToPath: true
 
       # 2. Now, call your templates. The Python version is already active.
       - template: templates/install_dependencies.yml
