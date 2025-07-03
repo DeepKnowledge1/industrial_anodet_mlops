@@ -3,7 +3,8 @@ steps:
     displayName: 'Use Python 3.11.0'
     inputs:
       versionSpec: '3.11.0'
-      addToPath: false
+      addToPath: true 
+
 
   - script: |
       python -m pip install --upgrade pip setuptools wheel
