@@ -3,4 +3,5 @@ steps:
       python -m pip install --upgrade pip
       pip install -r requirements.txt
       workingDirectory: $(Build.SourcesDirectory)/requirements
+      pip show numpy
     displayName: 'Install dependencies'
