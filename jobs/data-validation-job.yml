@@ -3,7 +3,7 @@ name: padim-data-validation
 display_name: Data Validation for MVTec
 experiment_name: padim-anomaly-detection
 command: >-
-  python data_validation.py 
+  conda run -n anomavision_env python data_validation.py 
   --input-data ${{inputs.data}} 
   --output-dir ${{outputs.result}}
 code: ../src

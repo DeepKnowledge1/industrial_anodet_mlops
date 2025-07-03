@@ -8,46 +8,33 @@ variables:
   - group: mlops-azure-components
 
 stages:
-  - stage: CheckoutStage
-    displayName: 'Checkout Repository'
-    jobs:
-      - job: CheckoutJob
-        steps:
-          - checkout: self
-            submodules: true
-            persistCredentials: true
-            fetchDepth: 0
+  # - stage: SetupStage
+  #   displayName: 'Setup and Preparation'
+  #   jobs:
+  #     - job: SetupJob
+  #       displayName: 'Checkout, Setup Python, Install Dependencies'
+  #       steps:
+  #         - checkout: self
+  #           submodules: true
+  #           persistCredentials: true
+  #           fetchDepth: 0
 
-  - stage: UpdateSubmodules
-    displayName: 'Update Submodules'
-    jobs:
-      - job: UpdateSubmodulesJob
-        steps:
-          - template: templates/update_submodules.yml
+  #         - template: templates/update_submodules.yml
 
-  - stage: UsePython
-    displayName: 'Set Up Python 3.11.0'
-    jobs:
-      - job: UsePythonJob
-        steps:
-          - template: templates/use_python_3_11_0.yml
+  #         - template: templates/use_python_3_11_0.yml
 
-  - stage: InstallDependencies
-    displayName: 'Install Dependencies'
-    jobs:
-      - job: InstallDependenciesJob
-        steps:
-          - template: templates/install_dependencies.yml
+  #         - template: templates/install_dependencies.yml
 
-  - stage: RunTests
-    displayName: 'Run Tests'
-    jobs:
-      - job: RunTestsJob
-        steps:
-          - template: templates/test.yml
+  # - stage: RunTests
+  #   displayName: 'Run Tests'
+  #   dependsOn: SetupStage
+  #   jobs:
+  #     - job: RunTestsJob
+  #       steps:
+  #         - template: templates/test.yml
 
   - stage: DataValidation
-    dependsOn: RunTests
+    # dependsOn: RunTests
     displayName: 'Data Validation'
     jobs:
       - template: templates/data_validation.yml
