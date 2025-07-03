@@ -1,7 +1,7 @@
 steps:
   - script: |
       echo Running tests...
-      pytest tests -v --doctest-modules --junitxml=junit/test-results.xml > pytest_output.log 2>&1
+      pytest tests -v --doctest-modules --junitxml=junit/test-results.xml
       type pytest_output.log
       echo Pytest finished with exit code %ERRORLEVEL%
     displayName: 'Run pytest'
