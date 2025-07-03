@@ -1,8 +1,6 @@
 steps:
   - script: |
-      pytest -v   
-      if not exist junit mkdir junit
-      pytest tests --doctest-modules --junitxml=junit/test-results.xml
+      pytest tests -v --doctest-modules --junitxml=junit/test-results.xml
     displayName: 'Run pytest'
 
   - task: PublishTestResults@2
@@ -10,5 +8,3 @@ steps:
     inputs:
       testResultsFiles: '**/test-results.xml'
     condition: succeededOrFailed()
-
-
