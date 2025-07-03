@@ -1,13 +1,8 @@
 steps:
   - script: |
-      where python
-      python --version
-      pip --version
-    displayName: 'Check Python & Pip Paths'
-
-  - script: |
       python -m pip install --upgrade pip
-      pip install -r requirements.txt
-      pip show numpy
+      python -m pip install -r requirements.txt
+      # Let's also install pytest here to be certain it's available
+      python -m pip install pytest
     displayName: 'Install dependencies'
     workingDirectory: $(Build.SourcesDirectory)/requirements
