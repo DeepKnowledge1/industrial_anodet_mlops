@@ -1,8 +1,12 @@
 steps:
-  
+ 
   - script: |
       echo Running tests...
-      pytest tests --collect-only -v
+      set PYTHONPATH=%PYTHONPATH%;$(Build.SourcesDirectory)\src
+      pytest tests -v --doctest-modules --junitxml=junit/test-results.xml
+      set EXITCODE=%ERRORLEVEL%
+      echo Pytest finished with exit code %EXITCODE%
+      exit /b %EXITCODE%
     displayName: 'Run pytest'
     continueOnError: false
     workingDirectory: $(Build.SourcesDirectory)
