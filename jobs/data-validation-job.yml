@@ -1,0 +1,20 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandJob.schema.json
+name: padim-data-validation
+display_name: Data Validation for MVTec
+experiment_name: padim-anomaly-detection
+command: >-
+  python data_validation.py 
+  --input-data ${{inputs.data}} 
+  --output-dir ${{outputs.result}}
+code: ../src
+environment: azureml:anomavision_env:1
+compute: azureml:compute-anomavision  # ← from COMPUTE_NAME
+
+inputs:
+  data:
+    type: uri_folder
+    path: azureml:anomaly-images:1
+outputs:
+  result:
+    type: uri_folder
+    mode: upload

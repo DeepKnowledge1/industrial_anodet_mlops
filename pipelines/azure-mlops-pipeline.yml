@@ -8,21 +8,89 @@ variables:
   - group: mlops-azure-components
 
 stages:
-  - stage: BuildAndTest
-    displayName: 'Build and Test Stage'
+  - stage: CheckoutStage
+    displayName: 'Checkout Repository'
     jobs:
-      - job: BuildAndTestJob
-        displayName: 'Build and Test'
-        pool:
-          name: Default
+      - job: CheckoutJob
         steps:
           - checkout: self
             submodules: true
             persistCredentials: true
             fetchDepth: 0
 
+  - stage: UpdateSubmodules
+    displayName: 'Update Submodules'
+    jobs:
+      - job: UpdateSubmodulesJob
+        steps:
           - template: templates/update_submodules.yml
+
+  - stage: UsePython
+    displayName: 'Set Up Python 3.11.0'
+    jobs:
+      - job: UsePythonJob
+        steps:
           - template: templates/use_python_3_11_0.yml
 
+  - stage: InstallDependencies
+    displayName: 'Install Dependencies'
+    jobs:
+      - job: InstallDependenciesJob
+        steps:
           - template: templates/install_dependencies.yml
+
+  - stage: RunTests
+    displayName: 'Run Tests'
+    jobs:
+      - job: RunTestsJob
+        steps:
           - template: templates/test.yml
+
+  - stage: DataValidation
+    dependsOn: RunTests
+    displayName: 'Data Validation'
+    jobs:
+      - template: jobs/data-validation-job.yml
+
+
+
+
+
+
+
+
+
+
+
+
+
+# trigger:
+#   - main
+
+# pool:
+#   name: Default
+
+# variables:
+#   - group: mlops-azure-components
+
+# stages:
+#   - stage: BuildAndTest
+#     displayName: 'Build and Test Stage'
+#     jobs:
+#       - job: BuildAndTestJob
+#         displayName: 'Build and Test'
+#         pool:
+#           name: Default
+#         steps:
+#           - checkout: self
+#             submodules: true
+#             persistCredentials: true
+#             fetchDepth: 0
+
+#           - template: templates/update_submodules.yml
+#           - template: templates/use_python_3_11_0.yml
+
+#           - template: templates/install_dependencies.yml
+#           - template: templates/test.yml
+#           - template: jobs/data-validation-job.yml
+

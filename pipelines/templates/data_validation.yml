@@ -1,0 +1,13 @@
+steps:
+- checkout: self
+- task: AzureCLI@2
+  inputs:
+    displayName: 'Data Validation'
+    inputs:
+    azureSubscription: mlops_anomaly_detection
+    scriptType: ps
+    scriptLocation: inlineScript
+    inlineScript: |
+      az ml job create --file "$(Build.SourcesDirectory)/jobs/data-validation-job.yml" `
+        --resource-group $(RESOURCE_GROUP) `
+        --workspace-name $(WORKSPACE)
