@@ -4,5 +4,3 @@ steps:
     inputs:
       versionSpec: '3.11.0'
       addToPath: true 
-
-    displayName: 'Install Python'
