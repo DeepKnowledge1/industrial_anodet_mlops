@@ -3,7 +3,16 @@ import torch
 from torch.utils.data import DataLoader, TensorDataset
 import numpy as np
 # from padim import Padim
-import src.AnomaVision.anodet as anodet
+# import src.AnomaVision.anodet as anodet
+
+
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "src")))
+
+import  AnomaVision.anodet as anodet  # or whatever module you're testing
+
+
 
 @pytest.fixture
 def dummy_dataloader():
