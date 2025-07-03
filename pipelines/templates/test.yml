@@ -2,10 +2,12 @@ steps:
   
   - script: |
       echo Running tests...
-      pytest tests -v --doctest-modules --junitxml=junit/test-results.xml
+      pytest tests -v --doctest-modules --junitxml=junit/test-results.xml > pytest_output.log 2>&1
+      type pytest_output.log
       set EXITCODE=%ERRORLEVEL%
       echo Pytest finished with exit code %EXITCODE%
       exit /b %EXITCODE%
+
     displayName: 'Run pytest'
     continueOnError: false
     workingDirectory: $(Build.SourcesDirectory)
