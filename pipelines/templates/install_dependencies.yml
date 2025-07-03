@@ -2,9 +2,9 @@
 steps:
 
   - script: |
-      curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+      {% comment %} curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
       python get-pip.py
-
+      {% endcomment %}
       python -m pip install --upgrade pip setuptools wheel
 
       poetry lock
