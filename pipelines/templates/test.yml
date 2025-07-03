@@ -6,6 +6,8 @@ steps:
       echo Pytest finished with exit code %ERRORLEVEL%
     displayName: 'Run pytest'
     continueOnError: false  # Critical to avoid stopping the pipeline
+    workingDirectory: $(Build.SourcesDirectory)/tests
+
 
   - task: PublishTestResults@2
     displayName: 'Publish Test Results'
