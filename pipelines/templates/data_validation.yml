@@ -1,15 +1,18 @@
-
 # File: pipelines/templates/data_validation.yml
-steps:
-  - task: AzureCLI@2
-    displayName: 'Data Validation'
-    inputs:
-      azureSubscription: mlops_anomaly_detection
-      scriptType: ps
-      scriptLocation: inlineScript
-      inlineScript: |
-        az ml job create --file "$(Build.SourcesDirectory)/jobs/data-validation-job.yml" `
-          --resource-group $(RESOURCE_GROUP) `
-          --workspace-name $(WORKSPACE)
+# This file should define a job or steps, not a full pipeline.
+# The 'trigger', 'pool', and 'variables' should be in the main pipeline file.
 
-
+jobs: # Or directly 'steps:' if it's a step template
+  - job: DataValidationJob # You might need to define a job name here
+    displayName: 'Data Validation Job'
+    steps:
+      - task: AzureCLI@2
+        displayName: 'Data Validation'
+        inputs:
+          azureSubscription: mlops_anomaly_detection
+          scriptType: ps
+          scriptLocation: inlineScript
+          inlineScript: |
+            az ml job create --file "$(Build.SourcesDirectory)/jobs/data-validation-job.yml" `
+              --resource-group $(RESOURCE_GROUP) `
+              --workspace-name $(WORKSPACE)
