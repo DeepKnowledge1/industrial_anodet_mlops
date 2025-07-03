@@ -1,25 +1,22 @@
 steps:
 
-  :: Install Poetry dependencies, including dev dependencies
+  # Install Poetry dependencies, including dev dependencies
   - script: |
       echo "Installing Poetry dependencies..."
-      poetry install --with dev --sync
+      poetry install --with dev
     displayName: 'Install Poetry Dependencies'
     workingDirectory: $(Build.SourcesDirectory)
     continueOnError: false
 
-  :: Set PYTHONPATH to include the src directory and run pytest
+  # Set PYTHONPATH to include the src directory and run pytest
   - script: |
       echo "Running tests..."
-      :: Add the current working directory (which is the root of your repo) to PYTHONPATH
-      :: This ensures that 'src' is discoverable as a package.
-      set PYTHONPATH=%CD%;%PYTHONPATH%
-      poetry run python -m pytest tests/test_anomavision.py -v --doctest-modules --junitxml=junit/test-results.xml
+      poetry run pytest test_anomavision.py -v --doctest-modules --junitxml=junit/test-results.xml
     displayName: 'Run pytest'
     workingDirectory: $(Build.SourcesDirectory)
     continueOnError: false
 
-  :: Publish test results
+  # Publish test results
   - task: PublishTestResults@2
     displayName: 'Publish Test Results'
     inputs:
