@@ -1,0 +1,10 @@
+steps:
+  - task: UsePythonVersion@0
+    displayName: 'Use Python 3.11.0'
+    inputs:
+      versionSpec: '3.11.0'
+      addToPath: false
+
+  - script: |
+      python -m pip install --upgrade pip setuptools wheel
+    displayName: 'Install Python and Poetry'

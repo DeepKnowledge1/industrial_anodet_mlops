@@ -1,0 +1,4 @@
+steps:
+  - script: |
+      poetry build
+    displayName: 'Poetry build package wheel'

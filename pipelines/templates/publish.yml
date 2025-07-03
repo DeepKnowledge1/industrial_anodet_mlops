@@ -1,0 +1,14 @@
+steps:
+  - task: CopyFiles@2
+    displayName: 'Copy dist package wheel'
+    inputs:
+      SourceFolder: '$(Build.SourcesDirectory)/dist'
+      TargetFolder: '$(Build.ArtifactStagingDirectory)/$(Build.Repository.Name)/dist'
+      CleanTargetFolder: true
+      OverWrite: true
+
+  - task: PublishBuildArtifacts@1
+    displayName: 'Artifact: Publish dist package wheel'
+    inputs:
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)/$(Build.Repository.Name)/dist'
+      ArtifactName: '$(Build.Repository.Name)\$(Build.BuildNumber)'

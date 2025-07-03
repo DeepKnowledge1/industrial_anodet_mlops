@@ -56,3 +56,5 @@ Thumbs.db
 mlruns/
 distributions/
 *.pt
+pipelines/azure-mlops-pipeline.yml
+junit/
