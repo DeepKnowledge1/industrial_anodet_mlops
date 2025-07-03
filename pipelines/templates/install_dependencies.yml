@@ -1,17 +1,13 @@
 
 steps:
 
+  # Install Poetry dependencies, including dev dependencies
   - script: |
-      {% comment %} curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
-      python get-pip.py
-      {% endcomment %}
-      python -m pip install --upgrade pip setuptools wheel
-
-      poetry lock
-      poetry install
-
-    displayName: 'Install dependencies'
-
+      echo "Installing Poetry dependencies..."
+      poetry install --with dev
+    displayName: 'Install Poetry Dependencies'
+    workingDirectory: $(Build.SourcesDirectory)
+    continueOnError: false
 
 
 
