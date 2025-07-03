@@ -33,10 +33,9 @@ steps:
   - script: |
       if not exist junit mkdir junit
       echo Running tests...
-      pytest tests -v --doctest-modules --junitxml=junit/test-results.xml
+      call pytest tests -v --doctest-modules --junitxml=junit/test-results.xml
       echo Pytest finished with exit code %ERRORLEVEL%
     displayName: 'Run pytest'
-    continueOnError: true
 
   - task: PublishTestResults@2
     displayName: 'Publish Test Results'
