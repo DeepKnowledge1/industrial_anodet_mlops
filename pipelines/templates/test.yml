@@ -1,9 +1,10 @@
 steps:
+
   - script: |
       echo Current dir: %cd%
       dir
-      dir tests
-      pytest tests -v --doctest-modules --junitxml=junit/test-results.xml
+      echo Running tests...
+      pytest tests -v --doctest-modules --junitxml=junit/test-results.xml || exit /b %ERRORLEVEL%
       echo Pytest finished with exit code %ERRORLEVEL%
     displayName: 'Run pytest'
     continueOnError: false
