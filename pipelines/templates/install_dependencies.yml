@@ -6,8 +6,8 @@ steps:
     displayName: 'Check Python & Pip Paths'
 
   - script: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip show numpy
-      displayName: 'Install dependencies'
-      workingDirectory: $(Build.SourcesDirectory)/requirements
+      python -m pip install --upgrade pip
+      pip install -r requirements.txt
+      pip show numpy
+    displayName: 'Install dependencies'
+    workingDirectory: $(Build.SourcesDirectory)/requirements
