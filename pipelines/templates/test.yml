@@ -1,12 +1,14 @@
 steps:
   - script: |
-      echo Running tests...
+      echo Current dir: %cd%
+      dir
+      dir tests
       pytest tests -v --doctest-modules --junitxml=junit/test-results.xml
       echo Pytest finished with exit code %ERRORLEVEL%
     displayName: 'Run pytest'
-    continueOnError: false  # Critical to avoid stopping the pipeline
-    workingDirectory: $(Build.SourcesDirectory)/tests
-
+    continueOnError: false
+    workingDirectory: $(Build.SourcesDirectory)
+    
 
   - task: PublishTestResults@2
     displayName: 'Publish Test Results'
