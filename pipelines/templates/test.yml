@@ -1,12 +1,15 @@
 steps:
-  - script: |
-      echo "Checking Poetry installation..."
+    - script: |
+      echo Checking Poetry installation...
       poetry --version
-      echo "Checking Python version..."
+
+      echo Checking Python version...
       python --version
-      echo "Checking installed packages..."
+
+      echo Checking installed packages...
       poetry show
-      echo "Checking pytest specifically..."
+
+      echo Checking pytest specifically...
       poetry run python -c "import pytest; print(f'pytest version: {pytest.__version__}')"
     displayName: 'Debug: Check installations'
 
@@ -20,3 +23,5 @@ steps:
     inputs:
       testResultsFiles: '**/test-results.xml'
     condition: succeededOrFailed()
+
+
