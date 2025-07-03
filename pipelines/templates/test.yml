@@ -1,6 +1,6 @@
 steps:
   - script: |
-      poetry run pytest tests --doctest-modules --junitxml=junit/test-results.xml
+      pytest tests --doctest-modules --junitxml=junit/test-results.xml
     displayName: 'Run pytest'
 
   - task: PublishTestResults@2
