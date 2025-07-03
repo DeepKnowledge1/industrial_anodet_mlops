@@ -1,7 +1,5 @@
 trigger:
-  branches:
-    include:
-      - main
+  - main
 
 pool:
   name: Default
@@ -9,52 +7,12 @@ pool:
 variables:
   - group: mlops-azure-components
 
-stages:
-
-- stage: UnitTests
-  displayName: Run Unit Tests using pytest
-  jobs:
-  - job: RunPytest
+jobs:
+  - job: BuildAndTest
+    displayName: 'Build and Test'
     steps:
-    - checkout: self
-      submodules: true
-      persistCredentials: true
-      fetchDepth: 0  
-
-    - script: |
-        git submodule update --init --recursive
-      displayName: 'Manually update submodules'
-
-    - task: UsePythonVersion@0
-      inputs:
-        versionSpec: '3.11.0'
-        addToPath: true
-
-    # Install Poetry on Windows
-    - script: |
-        python -m pip install --upgrade pip
-        python -m pip install poetry
-        poetry --version
-      displayName: 'Install Poetry'
-
-    # Configure Poetry
-    - script: |
-        poetry config virtualenvs.create true
-        poetry config virtualenvs.in-project true
-        poetry config --list
-      displayName: 'Configure Poetry'
-
-    # Install dependencies
-    - script: |
-        poetry install --only main
-      displayName: 'Install Poetry dependencies'
-
-    # Run tests
-    - script: |
-        poetry run pytest tests --doctest-modules --junitxml=junit/test-results.xml
-      displayName: 'Run pytest'
-
-    - task: PublishTestResults@2
-      displayName: 'Publish Test Results'
-      inputs:
-        testResultsFiles: '**/test-results.xml'
+      - template: templates/setup.yml
+      - template: templates/install_dependencies.yml
+      - template: templates/test.yml
+      # - template: templates/build.yml
+      # - template: templates/publish.yml

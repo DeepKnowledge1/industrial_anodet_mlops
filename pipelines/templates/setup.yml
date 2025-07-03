@@ -5,7 +5,4 @@ steps:
       versionSpec: '3.11.0'
       addToPath: true 
 
-  - script: |
-      python -m pip install --upgrade pip setuptools wheel
-      
-    displayName: 'Install Python and Poetry'
+    displayName: 'Install Python'
