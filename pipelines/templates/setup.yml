@@ -7,4 +7,6 @@ steps:
 
   - script: |
       python -m pip install --upgrade pip setuptools wheel
+      pip install poetry
+
     displayName: 'Install Python and Poetry'
