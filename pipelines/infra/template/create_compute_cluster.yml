@@ -1,0 +1,20 @@
+parameters: {}
+jobs:
+  - job: CreateComputeCluster
+    displayName: "Create Azure ML Compute Cluster"
+    steps:
+      - task: AzureCLI@2
+        inputs:
+          azureSubscription: mlops_anomaly_detection
+          scriptType: ps
+          scriptLocation: inlineScript
+          inlineScript: |
+            az ml compute create `
+              --name $(COMPUTE_NAME) `
+              --type AmlCompute `
+              --size Standard_DS2_v2 `
+              --min-instances 0 `
+              --max-instances 1 `
+              --idle-time-before-scale-down 120 `
+              --resource-group $(RESOURCE_GROUP) `
+              --workspace-name $(WORKSPACE)

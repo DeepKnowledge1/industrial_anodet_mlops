@@ -1,0 +1,23 @@
+parameters: {}
+jobs:
+  - job: CreateAKS
+    displayName: "Create AKS Cluster"
+    steps:
+      - task: AzureCLI@2
+        inputs:
+          azureSubscription: mlops_anomaly_detection
+          scriptType: ps
+          scriptLocation: inlineScript
+          inlineScript: |
+            az aks create `
+              --resource-group $(RESOURCE_GROUP) `
+              --name $(AKS_NAME) `
+              --enable-cluster-autoscaler `
+              --min-count 1 `
+              --max-count 2 `
+              --node-count 2 `
+              --node-vm-size Standard_DS3_v2 `
+              --enable-managed-identity `
+              --generate-ssh-keys `
+              --enable-addons monitoring `
+              --load-balancer-idle-timeout 4

@@ -14,4 +14,5 @@ jobs: # Or directly 'steps:' if it's a step template
           inlineScript: |
             az ml job create --file "$(Build.SourcesDirectory)/jobs/data-validation-job.yml" `
               --resource-group $(RESOURCE_GROUP) `
-              --workspace-name $(WORKSPACE)
+              --workspace-name $(WORKSPACE) `
+              --stream

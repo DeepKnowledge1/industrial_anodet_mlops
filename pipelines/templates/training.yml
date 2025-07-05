@@ -1,0 +1,17 @@
+parameters: {}
+jobs:
+  - job: RunAzureMLJob
+    displayName: "Run Azure ML Training Job"
+    steps:
+      - task: AzureCLI@2
+        displayName: "Create and Stream Azure ML Job"
+        inputs:
+          azureSubscription: mlops_anomaly_detection
+          scriptType: ps
+          scriptLocation: inlineScript
+          inlineScript: |
+            az ml job create `
+              --file "$(Build.SourcesDirectory)/pipelines/training-job.yml" `
+              --resource-group $(RESOURCE_GROUP) `
+              --workspace-name $(WORKSPACE) `
+              --stream

@@ -1,0 +1,20 @@
+parameters: {}
+jobs:
+  - job: UploadDataset
+    displayName: "Upload Training Dataset images"
+    steps:
+      - task: AzureCLI@2
+        inputs:
+          azureSubscription: mlops_anomaly_detection
+          scriptType: ps
+          scriptLocation: inlineScript
+          inlineScript: |
+            $path = "$(DATA_ANO_DIR)"
+            Write-Host "Uploading from: $path"
+            az ml data create `
+              --name anomaly-images `
+              --type uri_folder `
+              --path $path ` 
+              --description "Training + test + ground truth images for anomaly detection" `
+              --workspace-name "$(WORKSPACE)" `
+              --resource-group "$(RESOURCE_GROUP)"

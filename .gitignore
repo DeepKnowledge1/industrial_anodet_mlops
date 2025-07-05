@@ -55,6 +55,12 @@ Thumbs.db
 *.onnx
 mlruns/
 distributions/
+outputs/
 *.pt
 pipelines/azure-mlops-pipeline - Copy.yml
 junit/
+
+pipelines/templates/acr_admin_login.yml
+pipelines/templates/assign_acr_pull_role.yml
+pipelines/templates/docker_build_np.yml
+pipelines/templates/docker_tag_and_push.yml

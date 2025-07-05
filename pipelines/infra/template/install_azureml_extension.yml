@@ -1,0 +1,17 @@
+
+parameters: {}
+jobs:
+  - job: InstallAzureMLExtension
+    displayName: "Install Azure ML Extension"
+    steps:
+      - task: AzureCLI@2
+        inputs:
+          azureSubscription: mlops_anomaly_detection
+          scriptType: ps
+          scriptLocation: inlineScript
+          inlineScript: |
+            az extension add --name ml
+
+
+
+

@@ -1,0 +1,19 @@
+parameters: {}
+jobs:
+  - job: CreateACR
+    displayName: "Create Azure Container Registry"
+    steps:
+      - task: AzureCLI@2
+        inputs:
+          azureSubscription: mlops_anomaly_detection
+          scriptType: ps
+          scriptLocation: inlineScript
+          inlineScript: |
+            az acr create `
+              --resource-group $(RESOURCE_GROUP) `
+              --name $(ACR_NAME) `
+              --sku Basic `
+              --location $(LOCATION) `
+              --admin-enabled true `
+              --role-assignment-mode rbac-abac
+

@@ -1,0 +1,16 @@
+parameters: {}
+jobs:
+  - job: CreateWorkspace
+    displayName: "Create Azure ML Workspace"
+    steps:
+      - task: AzureCLI@2
+        inputs:
+          azureSubscription: mlops_anomaly_detection
+          scriptType: ps
+          scriptLocation: inlineScript
+          inlineScript: |
+            az ml workspace create `
+              --name $(WORKSPACE) `
+              --resource-group $(RESOURCE_GROUP) `
+              --location $(LOCATION) `
+              --set identity.type=SystemAssigned
