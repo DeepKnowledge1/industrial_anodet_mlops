@@ -16,6 +16,6 @@ jobs: # Or directly 'steps:' if it's a step template
               --resource-group $(RESOURCE_GROUP) `
               --workspace-name $(WORKSPACE) `
               --stream `
-              --set tags='{"mlflow.source.git.branch": "unknown"}' ` # Pass as JSON string
+              --set tags='{"mlflow.source.git.branch": "unknown"}' `
               --debug
 
