@@ -25,4 +25,4 @@ outputs:
     mode: upload
 
 tags: # This section is crucial
-  mlflow.source.git.branch: unknown # # ERROR: Met error <class 'KeyError'>:'mlflow.source.git.branch'
+  mlflow.source.git.branch: "unknown" # # ERROR: Met error <class 'KeyError'>:'mlflow.source.git.branch'
