@@ -33,11 +33,11 @@ stages:
   #       steps:
   #         - template: templates/unit_test.yml
 
-  # - stage: DataValidation
-  #   # dependsOn: RunTests
-  #   displayName: 'Data Validation'
-  #   jobs:
-  #     - template: templates/data_validation.yml
+  - stage: DataValidation
+    # dependsOn: RunTests
+    displayName: 'Data Validation'
+    jobs:
+      - template: templates/data_validation.yml
 
   - stage: TrainModel
     dependsOn: DataValidation
