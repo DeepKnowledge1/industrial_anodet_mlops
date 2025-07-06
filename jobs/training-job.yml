@@ -36,3 +36,6 @@ outputs:
 
 compute: azureml:compute-anomavision  # ← from COMPUTE_NAME
 experiment_name: training_anomavision
+
+tags: # This section is crucial
+  mlflow.source.git.branch: main

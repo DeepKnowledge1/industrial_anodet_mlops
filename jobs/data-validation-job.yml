@@ -25,4 +25,4 @@ outputs:
     mode: upload
 
 tags: # This section is crucial
-  mlflow.source.git.branch: "unknown" # This should be a string value
+  mlflow.source.git.branch: main
