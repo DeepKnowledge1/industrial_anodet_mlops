@@ -13,21 +13,12 @@ stages:
   - stage: BootstrapAzureMLInfra
     displayName: Provision Azure ML Infrastructure
     jobs:
-    - job: BootstrapInfra
-      displayName: "Provision Azure ML Resources Sequentially"
-      steps:
-        - template: templates/install_azureml_extension.yml
-
-        - template: templates/create_resource_group.yml
-
-        - template: templates/create_workspace.yml
-
-        - template: templates/create_compute_cluster.yml
-
-        - template: templates/upload_dataset.yml
-
-        - template: templates/register_env.yml
-
+      - template: templates/install_azureml_extension.yml
+      - template: templates/create_resource_group.yml
+      - template: templates/create_workspace.yml
+      - template: templates/create_compute_cluster.yml
+      - template: templates/upload_dataset.yml
+      - template: templates/register_env.yml
 
   # Optional stage for ACR & Key Vault
   # - stage: SetupKeyVaultACR
@@ -42,9 +33,6 @@ stages:
   #   displayName: "Create and Attach AKS Cluster"
   #   condition: and(succeeded(), eq(variables['RUN_AKS'], 'true'))
   #   jobs:
-  #   - job: BootstrapInfra
-  #     displayName: "Provision Azure ML Resources Sequentially"
-  #     steps: 
-  #       - template: templates/create_aks.yml
-  #       - template: templates/create_k8s_extension.yml
-  #       - template: templates/attach_aks_to_workspace.yml
+  #     - template: templates/create_aks.yml
+  #     - template: templates/create_k8s_extension.yml
+  #     - template: templates/attach_aks_to_workspace.yml
