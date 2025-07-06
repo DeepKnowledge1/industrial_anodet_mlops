@@ -26,3 +26,7 @@ outputs:
 
 # tags: # This section is crucial
 #   mlflow.source.git.branch: main
+properties:
+  mlflow.source.git.branch: ""
+  mlflow.source.git.repo: ""
+  mlflow.source.git.commit: ""
