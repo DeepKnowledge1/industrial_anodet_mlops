@@ -47,11 +47,16 @@ stages:
   #     - template: templates/training.yml
 
 
-  - stage: RegisterModel
-    # dependsOn: DataValidation
-    displayName: 'Model registering'
+  # - stage: RegisterModel
+  #   # dependsOn: DataValidation
+  #   displayName: 'Model registering'
+  #   jobs:
+  #     - template: templates/register_model.yml
+  - stage: DownloadModel
+    # dependsOn: RegisterModel
+    displayName: 'Model download'
     jobs:
-      - template: templates/register_model.yml
+      - template: templates/download_model.yml
 
 
 
