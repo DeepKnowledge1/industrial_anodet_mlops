@@ -12,8 +12,9 @@ jobs:
               --resource-group $(RESOURCE_GROUP) `
               --workspace-name $(WORKSPACE) `
               --stream `
-              --debug `
-              --set properties.mlflow.source.git.branch=null
+              --set properties.mlflow.source.git.branch=null `
+              --set properties.mlflow.source.git.repo=null `
+              --set properties.mlflow.source.git.commit=null
 
 
               
