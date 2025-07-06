@@ -2,6 +2,11 @@ $schema: https://azuremlschemas.azureedge.net/latest/commandJob.schema.json
 name: padim-data-validation
 display_name: Data Validation for MVTec
 experiment_name: padim-anomaly-detection
+
+environment_variables:
+  MLFLOW_EXPERIMENT_NAME: "none"
+  MLFLOW_SOURCE_GIT_BRANCH: "none"
+
 command: >-
   conda run -n anomavision_env python data_validation.py 
   --input-data ${{inputs.data}} 
