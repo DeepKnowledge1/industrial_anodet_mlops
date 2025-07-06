@@ -3,7 +3,9 @@ name: padim-data-validation
 display_name: Data Validation for MVTec
 experiment_name: padim-anomaly-detection
 
-
+environment_variables:
+  MLFLOW_EXPERIMENT_NAME: "none"
+  MLFLOW_SOURCE_GIT_BRANCH: "none"
 
 command: >-
   conda run -n anomavision_env python data_validation.py 
@@ -11,7 +13,7 @@ command: >-
   --output-dir ${{outputs.result}}
 code: ../src
 environment: azureml:anomavision_env:1
-compute: azureml:compute-anomavision  # ← from COMPUTE_NAME
+compute: azureml:compute-anomavision
 
 inputs:
   data:
@@ -22,8 +24,5 @@ outputs:
     type: uri_folder
     mode: upload
 
-tags:
-  mlflow.source.git.branch: unknown # ERROR: Met error <class 'KeyError'>:'mlflow.source.git.branch'
-
-
-
+tags: # This section is crucial
+  mlflow.source.git.branch: unknown # # ERROR: Met error <class 'KeyError'>:'mlflow.source.git.branch'
