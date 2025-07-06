@@ -16,3 +16,5 @@ jobs: # Or directly 'steps:' if it's a step template
               --resource-group $(RESOURCE_GROUP) `
               --workspace-name $(WORKSPACE) `
               --stream
+              --debug
+
