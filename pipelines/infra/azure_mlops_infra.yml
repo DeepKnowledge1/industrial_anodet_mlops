@@ -13,34 +13,20 @@ stages:
   - stage: BootstrapAzureMLInfra
     displayName: Provision Azure ML Infrastructure
     jobs:
-      - job: InstallAzureMLExtension
-        displayName: "Install Azure ML Extension"
-        template: templates/install_azureml_extension.yml
+    - job: BootstrapInfra
+      displayName: "Provision Azure ML Resources Sequentially"
+      steps:
+        - template: templates/install_azureml_extension.yml
 
-      - job: CreateResourceGroup
-        displayName: "Create Resource Group"
-        dependsOn: InstallAzureMLExtension
-        template: templates/create_resource_group.yml
+        - template: templates/create_resource_group.yml
 
-      - job: CreateWorkspace
-        displayName: "Create Azure ML Workspace"
-        dependsOn: CreateResourceGroup
-        template: templates/create_workspace.yml
+        - template: templates/create_workspace.yml
 
-      - job: CreateComputeCluster
-        displayName: "Create Azure ML Compute Cluster"
-        dependsOn: CreateWorkspace
-        template: templates/create_compute_cluster.yml
+        - template: templates/create_compute_cluster.yml
 
-      - job: UploadDataset
-        displayName: "Upload Training Dataset Images"
-        dependsOn: CreateComputeCluster
-        template: templates/upload_dataset.yml
+        - template: templates/upload_dataset.yml
 
-      - job: RegisterEnvironment
-        displayName: "Register Training Environment"
-        dependsOn: UploadDataset
-        template: templates/register_env.yml
+        - template: templates/register_env.yml
 
 
   # Optional stage for ACR & Key Vault
@@ -56,16 +42,9 @@ stages:
   #   displayName: "Create and Attach AKS Cluster"
   #   condition: and(succeeded(), eq(variables['RUN_AKS'], 'true'))
   #   jobs:
-  #     - job: CreateAKS
-  #       displayName: "Create AKS Cluster"
-  #       template: templates/create_aks.yml
-
-  #     - job: CreateK8sExtension
-  #       displayName: "Create Kubernetes Extension"
-  #       dependsOn: CreateAKS
-  #       template: templates/create_k8s_extension.yml
-
-  #     - job: AttachAKSToWorkspace
-  #       displayName: "Attach AKS to Workspace"
-  #       dependsOn: CreateK8sExtension
-  #       template: templates/attach_aks_to_workspace.yml
+  #   - job: BootstrapInfra
+  #     displayName: "Provision Azure ML Resources Sequentially"
+  #     steps: 
+  #       - template: templates/create_aks.yml
+  #       - template: templates/create_k8s_extension.yml
+  #       - template: templates/attach_aks_to_workspace.yml
