@@ -1,4 +1,5 @@
-
+# training.yml
+jobs:
 - job: RunAzureMLJob
   displayName: "Run Azure ML Training Job"
   steps:
