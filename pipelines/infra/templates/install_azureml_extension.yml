@@ -1,4 +1,5 @@
 
+parameters: {}
 jobs:
   - job: InstallAzureMLExtension
     displayName: "Install Azure ML Extension"
@@ -10,4 +11,7 @@ jobs:
           scriptLocation: inlineScript
           inlineScript: |
             az extension add --name ml
+
+
+
 
