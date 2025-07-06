@@ -15,6 +15,6 @@ jobs:
             --version 1 `
             --path "azureml://jobs/$jobName/outputs/model_output" `
             --type custom_model `
-            --description ""PaDiM anomaly detection model" `" `
+            --description "PaDiM anomaly detection model" `
             --resource-group $(RESOURCE_GROUP) `
             --workspace-name $(WORKSPACE)
