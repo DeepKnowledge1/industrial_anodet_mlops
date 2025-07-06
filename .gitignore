@@ -64,3 +64,5 @@ pipelines/templates/acr_admin_login.yml
 pipelines/templates/assign_acr_pull_role.yml
 pipelines/templates/docker_build_np.yml
 pipelines/templates/docker_tag_and_push.yml
+monitoring/prometheus.yml
+docker-compose.yml
