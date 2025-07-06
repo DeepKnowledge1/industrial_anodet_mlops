@@ -17,5 +17,6 @@ jobs: # Or directly 'steps:' if it's a step template
               --workspace-name $(WORKSPACE) `
               --stream `
               --debug `
-              --set tags='{"mlflow.source.git.branch": "unknown"}'
+              --set tags.mlflow.source.git.branch="unknown"
+
 
