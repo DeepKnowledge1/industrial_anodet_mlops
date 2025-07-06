@@ -13,12 +13,16 @@ stages:
   - stage: BootstrapAzureMLInfra
     displayName: Provision Azure ML Infrastructure
     jobs:
-      - template: templates/install_azureml_extension.yml
-      - template: templates/create_resource_group.yml
-      - template: templates/create_workspace.yml
-      - template: templates/create_compute_cluster.yml
-      - template: templates/upload_dataset.yml
-      - template: templates/register_env.yml
+      - job: BootstrapAzureMLInfra
+        displayName: 'Checkout, Setup Python, Install Dependencies'
+        steps:
+          - template: templates/install_azureml_extension.yml
+          - template: templates/create_resource_group.yml
+          - template: templates/create_workspace.yml
+          - template: templates/create_compute_cluster.yml
+          - template: templates/upload_dataset.yml
+          - template: templates/register_env.yml
+
 
   # Optional stage for ACR & Key Vault
   # - stage: SetupKeyVaultACR
