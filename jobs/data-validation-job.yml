@@ -21,6 +21,7 @@ outputs:
     type: uri_folder
     mode: upload
 
+# to avoid Met error <class 'KeyError'>:'mlflow.source.git.branch'
 
 properties:
   mlflow.source.git.branch: ""

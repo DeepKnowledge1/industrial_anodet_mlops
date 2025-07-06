@@ -1,5 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandJob.schema.json
 type: command
+name: training-anomavision
 
 description: Train a PaDiM anomaly detection model on images
 display_name: Train PaDiM Model
@@ -35,6 +36,8 @@ outputs:
     # path: azureml://datastores/workspaceblobstore/paths/models/anomavision/    
 
 compute: azureml:compute-anomavision  # ← from COMPUTE_NAME
+
+# to avoid Met error <class 'KeyError'>:'mlflow.source.git.branch'
 
 properties:
   mlflow.source.git.branch: ""
