@@ -4,9 +4,6 @@ name: padim-data-validation
 display_name: Data Validation for MVTec
 experiment_name: padim-anomaly-detection
 
-environment_variables:
-  MLFLOW_EXPERIMENT_NAME: "none"
-
 command: >-
   conda run -n anomavision_env python data_validation.py 
   --input-data ${{inputs.data}} 
@@ -24,8 +21,7 @@ outputs:
     type: uri_folder
     mode: upload
 
-# tags: # This section is crucial
-#   mlflow.source.git.branch: main
+
 properties:
   mlflow.source.git.branch: ""
   mlflow.source.git.repo: ""

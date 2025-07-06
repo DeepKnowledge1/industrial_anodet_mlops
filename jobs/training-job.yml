@@ -35,7 +35,8 @@ outputs:
     # path: azureml://datastores/workspaceblobstore/paths/models/anomavision/    
 
 compute: azureml:compute-anomavision  # ← from COMPUTE_NAME
-experiment_name: training_anomavision
 
-tags: # This section is crucial
-  mlflow.source.git.branch: main
+properties:
+  mlflow.source.git.branch: ""
+  mlflow.source.git.repo: ""
+  mlflow.source.git.commit: ""
