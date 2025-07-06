@@ -12,10 +12,12 @@ jobs: # Or directly 'steps:' if it's a step template
           scriptType: ps
           scriptLocation: inlineScript
           inlineScript: |
-            az ml job create --file "$(Build.SourcesDirectory)/jobs/data-validation-job.yml" `
+            az ml job create --file "$(Build.SourcesDirectory)/jobs/data-validation-job.yml" --resource-group $(RESOURCE_GROUP) --workspace-name $(WORKSPACE) --stream --set tags='{"mlflow.source.git.branch": "unknown"}' --debug
+
+            {% comment %} az ml job create --file "$(Build.SourcesDirectory)/jobs/data-validation-job.yml" `
               --resource-group $(RESOURCE_GROUP) `
               --workspace-name $(WORKSPACE) `
               --stream `
               --set tags='{"mlflow.source.git.branch": "unknown"}'` # Pass as JSON string
               --debug
-
+ {% endcomment %}
