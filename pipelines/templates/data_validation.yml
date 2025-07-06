@@ -1,3 +1,5 @@
+
+
 jobs:
   - job: DataValidationJob
     steps:
@@ -8,8 +10,12 @@ jobs:
           scriptType: ps
           scriptLocation: inlineScript
           inlineScript: |
-            az ml job create --file "./jobs/data-validation-job.yml" `
+            param(
+                [string]$SourcesDirectory
+            )
+            az ml job create --file "$SourcesDirectory/jobs/data-validation-job.yml" `
               --resource-group $(RESOURCE_GROUP) `
               --workspace-name $(WORKSPACE) `
               --stream `
               --debug
+          arguments: --SourcesDirectory "$(Build.SourcesDirectory)"
