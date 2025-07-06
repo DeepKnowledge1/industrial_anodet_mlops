@@ -11,6 +11,7 @@ command: >
   --dataset_path ${{inputs.dataset_path}}
   --test_dataset_path ${{inputs.test_dataset_path}}
   --output_model ${{outputs.model_output}}
+  --evaluate_model
 
 
 environment: azureml:anomavision_env:1
@@ -34,3 +35,4 @@ outputs:
     # path: azureml://datastores/workspaceblobstore/paths/models/anomavision/    
 
 compute: azureml:compute-anomavision  # ← from COMPUTE_NAME
+experiment_name: training_anomavision

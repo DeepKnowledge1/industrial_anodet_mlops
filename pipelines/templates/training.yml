@@ -11,7 +11,7 @@ jobs:
         scriptLocation: inlineScript
         inlineScript: |
           az ml job create `
-            --file "$(Build.SourcesDirectory)/pipelines/training-job.yml" `
+            --file "$(Build.SourcesDirectory)/jobs/training-job.yml" `
             --resource-group $(RESOURCE_GROUP) `
             --workspace-name $(WORKSPACE) `
             --stream
