@@ -6,7 +6,6 @@ experiment_name: padim-anomaly-detection
 
 environment_variables:
   MLFLOW_EXPERIMENT_NAME: "none"
-  MLFLOW_SOURCE_GIT_BRANCH: "unknown"
 
 command: >-
   conda run -n anomavision_env python data_validation.py 
