@@ -1,3 +1,4 @@
+jobs:
 - job: RegisterModel  
   displayName: "Register Model in Azure ML"
   steps:
