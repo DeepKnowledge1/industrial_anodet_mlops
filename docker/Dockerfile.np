@@ -41,7 +41,7 @@ COPY ../src/static/anodet ./static/anodet
 RUN mkdir -p distributions
 
 # Copy model files if they exist (optional - can be mounted as volumes)
-COPY ../models/anomavision_model/model_output/padim_model.onnx . 
+COPY ../models/padim_model.onnx . 
 # COPY ../distributions/padim_model.pt ./distributions/
 
 # Change ownership to non-root user
