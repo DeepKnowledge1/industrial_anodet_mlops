@@ -19,5 +19,5 @@ jobs:
 
     - task: PublishBuildArtifacts@1
       inputs:
-        pathToPublish: 'models/anomavision_model'
-        artifactName: 'onnxmodel'
+        pathToPublish: 'models/anomavision_model/model_output'
+        artifactName: 'models'
