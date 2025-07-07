@@ -102,12 +102,12 @@ stages:
 
 
 
-  # - stage: BuildDockerImage    
-  #   # dependsOn: AssignAcrPullRole  
-  #   displayName: 'Build Docker Image (FastAPI + NumPy)'
+  - stage: BuildDockerImage    
+    # dependsOn: AssignAcrPullRole  
+    displayName: 'Build Docker Image (FastAPI + NumPy)'
 
-  #   jobs:
-  #     - template: templates/docker_build_np.yml
+    jobs:
+      - template: templates/docker_build_np.yml
 
 
   # - stage: AcrAdminLogin    
