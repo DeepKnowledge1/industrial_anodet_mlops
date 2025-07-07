@@ -7,13 +7,6 @@ jobs:
       inputs:
         artifactName: 'models'
         downloadPath: './'  
-    - task: Docker@2
-      displayName: "Build FastAPI Docker Image with NumPy"
-      inputs:
-        command: build
-        repository: 'fastapi-anomavision'  
-        Dockerfile: docker/Dockerfile.np
-        buildContext: .
-        tags: |
-          np
-        arguments: --no-cache
+    - script: |
+        docker build --no-cache -t fastapi-anomavision:np -f docker/Dockerfile.np .
+      displayName: "Build FastAPI Docker Image with NumPy"        
