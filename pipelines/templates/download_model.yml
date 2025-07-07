@@ -9,14 +9,15 @@ jobs:
         scriptType: ps
         scriptLocation: inlineScript
         inlineScript: |
-          # Define download path
+          
           az ml model download `
             --name "anomavision_model" `
             --version 1 `
             --resource-group $(RESOURCE_GROUP) `
             --workspace-name $(WORKSPACE) `
-            --download-path "."
+            --download-path "./models"
+
     - task: PublishBuildArtifacts@1
       inputs:
-        pathToPublish: 'models'
-        artifactName: 'models'
+        pathToPublish: 'models/anomavision_model'
+        artifactName: 'onnxmodel'
