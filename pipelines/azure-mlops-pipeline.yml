@@ -110,17 +110,17 @@ stages:
       - template: templates/docker_build_np.yml
 
 
-  # - stage: AcrAdminLogin    
-  #   # dependsOn: BuildDockerImage  
-  #   displayName: 'Login to ACR Using Admin Credentials'
+  - stage: AcrAdminLogin    
+    # dependsOn: BuildDockerImage  
+    displayName: 'Login to ACR Using Admin Credentials'
 
-  #   jobs:
-  #     - template: templates/acr_admin_login.yml
+    jobs:
+      - template: templates/acr_admin_login.yml
 
 
-  # - stage: DockerTagAndPush    
-  #   # dependsOn: AcrAdminLogin  
-  #   displayName: 'Tag and Push Docker Image to ACR'
+  - stage: DockerTagAndPush    
+    # dependsOn: AcrAdminLogin  
+    displayName: 'Tag and Push Docker Image to ACR'
 
-  #   jobs:
-  #     - template: templates/docker_tag_and_push.yml
+    jobs:
+      - template: templates/docker_tag_and_push.yml
