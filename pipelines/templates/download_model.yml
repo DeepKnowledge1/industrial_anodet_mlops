@@ -12,11 +12,6 @@ jobs:
           # Define download path
           $downloadPath = "./models"
 
-          # Create directory if not exists
-          if (-Not (Test-Path $downloadPath)) {
-              New-Item -ItemType Directory -Force -Path $downloadPath | Out-Null
-          }
-
           # Download the model to the specified path
           az ml model download `
             --name "anomavision_model" `
@@ -24,24 +19,3 @@ jobs:
             --resource-group $(RESOURCE_GROUP) `
             --workspace-name $(WORKSPACE) `
             --download-path $downloadPath
-
-          Write-Host "Model downloaded to: $downloadPath"
-
-          # Check expected location
-          $expectedPath = "$downloadPath/model_output/padim_model.onnx"
-          $destFile = "./padim_model.onnx"
-
-          if (Test-Path $expectedPath) {
-              Copy-Item -Path $expectedPath -Destination $destFile -Force
-              Write-Host "✅ Moved padim_model.onnx to root directory."
-          } else {
-              # Try to find the ONNX file recursively
-              $foundOnnx = Get-ChildItem -Path $downloadPath -Recurse -Filter *.onnx | Select-Object -First 1
-              if ($foundOnnx) {
-                  Copy-Item -Path $foundOnnx.FullName -Destination $destFile -Force
-                  Write-Host "⚠️ Expected path not found, but ONNX file located at: $($foundOnnx.FullName)"
-                  Write-Host "✅ Moved to: $destFile"
-              } else {
-                  Write-Error "❌ ONNX model file not found anywhere in: $downloadPath"
-              }
-          }

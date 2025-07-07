@@ -40,18 +40,19 @@ stages:
   #   jobs:
   #     - template: templates/data_validation.yml
 
-  # - stage: TrainModel
-  #   dependsOn: DataValidation
-  #   displayName: 'Training Process'
-  #   jobs:
-  #     - template: templates/training.yml
+  - stage: TrainModel
+    dependsOn: DataValidation
+    displayName: 'Training Process'
+    jobs:
+      - template: templates/training.yml
 
 
-  # - stage: RegisterModel
-  #   # dependsOn: DataValidation
-  #   displayName: 'Model registering'
-  #   jobs:
-  #     - template: templates/register_model.yml
+  - stage: RegisterModel
+    # dependsOn: DataValidation
+    displayName: 'Model registering'
+    jobs:
+      - template: templates/register_model.yml
+      
   - stage: DownloadModel
     # dependsOn: RegisterModel
     displayName: 'Model download'
