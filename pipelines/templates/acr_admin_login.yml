@@ -18,10 +18,7 @@ jobs:
             # Extract username and password
             $username = $creds.username
             $password = $creds.passwords[0].value
-
-            # Print them
-            #Write-Output "Username: $username"
-            #Write-Output "Password: $password"
-
-            # Docker l
             
+            docker login $(DOCKER_IMAGE_NAME).azurecr.io --username $username --password $password
+
+
