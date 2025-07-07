@@ -3,6 +3,10 @@ jobs:
 - job: BuildDockerImage
   displayName: "Build Docker Image (FastAPI + NumPy)"
   steps:
+    - task: DownloadBuildArtifacts@0
+      inputs:
+        artifactName: 'onnxmodel'
+        downloadPath: './models'
     - task: Docker@2
       displayName: "Build FastAPI Docker Image with NumPy"
       inputs:
