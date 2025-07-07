@@ -19,6 +19,6 @@ jobs:
             $username = $creds.username
             $password = $creds.passwords[0].value
             
-            docker login $(DOCKER_IMAGE_NAME).azurecr.io --username $username --password $password
+            docker login $(ACR_NAME).azurecr.io --username $username --password $password
 
 

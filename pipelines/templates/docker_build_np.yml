@@ -11,8 +11,9 @@ jobs:
       displayName: "Build FastAPI Docker Image with NumPy"
       inputs:
         command: build
+        repository: 'fastapi-anomavision'  
         Dockerfile: docker/Dockerfile.np
         buildContext: .
         tags: |
-          fastapi-$(DOCKER_IMAGE_NAME):np
+          np
         arguments: --no-cache
