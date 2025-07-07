@@ -1,0 +1,9 @@
+parameters: {}
+jobs:
+  - job: DockerTagAndPush
+    displayName: "Tag and Push Docker Image to ACR"
+    steps:
+      - script: |
+          docker tag fastapi-$(DOCKER_IMAGE_NAME):np $(ACR_NAME).azurecr.io/fastapi-$(DOCKER_IMAGE_NAME):latest
+          docker push $(ACR_NAME).azurecr.io/fastapi-$(DOCKER_IMAGE_NAME):latest
+        displayName: "Tag and Push Docker Image"

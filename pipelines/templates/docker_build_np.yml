@@ -1,0 +1,14 @@
+parameters: {}
+jobs:
+- job: BuildDockerImage
+  displayName: "Build Docker Image (FastAPI + NumPy)"
+  steps:
+    - task: Docker@2
+      displayName: "Build FastAPI Docker Image with NumPy"
+      inputs:
+        command: build
+        Dockerfile: docker/Dockerfile.np
+        buildContext: .
+        tags: |
+          fastapi-$(DOCKER_IMAGE_NAME):np
+        arguments: --no-cache

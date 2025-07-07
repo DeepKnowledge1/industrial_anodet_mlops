@@ -40,65 +40,87 @@ stages:
   #   jobs:
   #     - template: templates/data_validation.yml
 
-  - stage: TrainModel
-    # dependsOn: DataValidation
-    displayName: 'Training Process'
+  # - stage: TrainModel
+  #   # dependsOn: DataValidation
+  #   displayName: 'Training Process'
+  #   jobs:
+  #     - template: templates/training.yml
+
+
+  # - stage: RegisterModel
+  #   # dependsOn: TrainModel
+  #   displayName: 'Model registering'
+  #   jobs:
+  #     - template: templates/register_model.yml
+
+  # - stage: DownloadModel
+  #   # dependsOn: RegisterModel
+  #   displayName: 'Model download'
+  #   jobs:
+  #     - template: templates/download_model.yml
+
+
+  - stage: AssignAcrPullRole
+    # dependsOn: DownloadModel
+    displayName: 'Assign ACR Pull Role to ML Workspace Identity'
     jobs:
-      - template: templates/training.yml
+      - template: templates/assign_acr_pull_role.yml
 
 
-  - stage: RegisterModel
-    # dependsOn: TrainModel
-    displayName: 'Model registering'
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  - stage: BuildDockerImage    
+    # dependsOn: AssignAcrPullRole  
+    displayName: 'Build Docker Image (FastAPI + NumPy)'
+
     jobs:
-      - template: templates/register_model.yml
+      - template: templates/docker_build_np.yml
 
-  - stage: DownloadModel
-    # dependsOn: RegisterModel
-    displayName: 'Model download'
+
+  - stage: AcrAdminLogin    
+    # dependsOn: BuildDockerImage  
+    displayName: 'Login to ACR Using Admin Credentials'
+
     jobs:
-      - template: templates/download_model.yml
+      - template: templates/acr_admin_login.yml
 
 
+  - stage: DockerTagAndPush    
+    # dependsOn: AcrAdminLogin  
+    displayName: 'Tag and Push Docker Image to ACR'
 
-
-
-
-
-
-
-
-
-
-
-
-# trigger:
-#   - main
-
-# pool:
-#   name: Default
-
-# variables:
-#   - group: mlops-azure-components
-
-# stages:
-#   - stage: BuildAndTest
-#     displayName: 'Build and Test Stage'
-#     jobs:
-#       - job: BuildAndTestJob
-#         displayName: 'Build and Test'
-#         pool:
-#           name: Default
-#         steps:
-#           - checkout: self
-#             submodules: true
-#             persistCredentials: true
-#             fetchDepth: 0
-
-#           - template: templates/update_submodules.yml
-#           - template: templates/use_python_3_11_0.yml
-
-#           - template: templates/install_dependencies.yml
-#           - template: templates/test.yml
-#           - template: jobs/data-validation-job.yml
-
+    jobs:
+      - template: templates/docker_tag_and_push.yml
