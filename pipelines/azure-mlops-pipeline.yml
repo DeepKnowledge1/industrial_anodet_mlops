@@ -60,54 +60,54 @@ stages:
   #     - template: templates/download_model.yml
 
 
-  - stage: AssignAcrPullRole
-    # dependsOn: DownloadModel
-    displayName: 'Assign ACR Pull Role to ML Workspace Identity'
-    jobs:
-      - template: templates/assign_acr_pull_role.yml
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  # - stage: BuildDockerImage    
-  #   # dependsOn: AssignAcrPullRole  
-  #   displayName: 'Build Docker Image (FastAPI + NumPy)'
-
+  # - stage: AssignAcrPullRole
+  #   # dependsOn: DownloadModel
+  #   displayName: 'Assign ACR Pull Role to ML Workspace Identity'
   #   jobs:
-  #     - template: templates/docker_build_np.yml
+  #     - template: templates/assign_acr_pull_role.yml
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  - stage: BuildDockerImage    
+    # dependsOn: AssignAcrPullRole  
+    displayName: 'Build Docker Image (FastAPI + NumPy)'
+
+    jobs:
+      - template: templates/docker_build_np.yml
 
 
   # - stage: AcrAdminLogin    
