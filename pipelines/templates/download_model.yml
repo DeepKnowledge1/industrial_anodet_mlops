@@ -11,6 +11,11 @@ jobs:
         inlineScript: |
           # Define download path
           $downloadPath = "./models"
+         
+          # Create directory if not exists
+          if (-Not (Test-Path $downloadPath)) {
+              New-Item -ItemType Directory -Force -Path $downloadPath | Out-Null
+          }
 
           # Download the model to the specified path
           az ml model download `
