@@ -53,11 +53,11 @@ stages:
   #   jobs:
   #     - template: templates/register_model.yml
 
-  # - stage: DownloadModel
-  #   # dependsOn: RegisterModel
-  #   displayName: 'Model download'
-  #   jobs:
-  #     - template: templates/download_model.yml
+  - stage: DownloadModel
+    # dependsOn: RegisterModel
+    displayName: 'Model download'
+    jobs:
+      - template: templates/download_model.yml
 
 
   # - stage: AssignAcrPullRole
