@@ -1,0 +1,36 @@
+parameters: {}
+jobs:
+  - job: AttachAcrToAks
+    displayName: "Attach ACR to AKS Cluster"
+    steps:
+      - task: AzureCLI@2
+        displayName: "Attach ACR to AKS"
+        inputs:
+          azureSubscription: mlops_anomaly_detection
+          scriptType: ps
+          scriptLocation: inlineScript
+          inlineScript: |
+            Write-Output "Attaching ACR $(ACR_NAME) to AKS $(AKS_NAME)..."
+            
+            az aks update `
+              --name $(AKS_NAME) `
+              --resource-group $(RESOURCE_GROUP) `
+              --attach-acr $(ACR_NAME)
+            
+            Write-Output "ACR attached successfully!"
+
+      - task: AzureCLI@2
+        displayName: "Verify ACR-AKS Connection"
+        inputs:
+          azureSubscription: mlops_anomaly_detection
+          scriptType: ps
+          scriptLocation: inlineScript
+          inlineScript: |
+            Write-Output "Verifying ACR connection..."
+            
+            az aks check-acr `
+              --name $(AKS_NAME) `
+              --resource-group $(RESOURCE_GROUP) `
+              --acr $(ACR_NAME).azurecr.io
+            
+            Write-Output "ACR connection verified!"

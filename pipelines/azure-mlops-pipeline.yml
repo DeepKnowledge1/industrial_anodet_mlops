@@ -9,98 +9,55 @@ variables:
 
 stages:
 
-  # - stage: SetupStage
-  #   displayName: 'Setup and Preparation'
-  #   jobs:
-  #     - job: SetupJob
-  #       displayName: 'Checkout, Setup Python, Install Dependencies'
-  #       steps:
-  #         - checkout: self
-  #           submodules: true
-  #           persistCredentials: true
-  #           fetchDepth: 0
+  - stage: SetupStage
+    displayName: 'Setup and Preparation'
+    jobs:
+      - job: SetupJob
+        displayName: 'Checkout, Setup Python, Install Dependencies'
+        steps:
+          - checkout: self
+            submodules: true
+            persistCredentials: true
+            fetchDepth: 0
 
-  #         - template: templates/update_submodules.yml
+          - template: templates/update_submodules.yml
 
-  #         - template: templates/use_python_3_11_0.yml
+          - template: templates/use_python_3_11_0.yml
 
-  #         - template: templates/install_dependencies.yml
+          - template: templates/install_dependencies.yml
 
-  # - stage: RunTests
-  #   displayName: 'Run UnitTests'
-  #   dependsOn: SetupStage
-  #   jobs:
-  #     - job: RunTestsJob
-  #       steps:
-  #         - template: templates/unit_test.yml
+  - stage: RunTests
+    displayName: 'Run UnitTests'
+    dependsOn: SetupStage
+    jobs:
+      - job: RunTestsJob
+        steps:
+          - template: templates/unit_test.yml
 
-  # - stage: DataValidation
-  #   # dependsOn: RunTests
-  #   displayName: 'Data Validation'
-  #   jobs:
-  #     - template: templates/data_validation.yml
+  - stage: DataValidation
+    # dependsOn: RunTests
+    displayName: 'Data Validation'
+    jobs:
+      - template: templates/data_validation.yml
 
-  # - stage: TrainModel
-  #   # dependsOn: DataValidation
-  #   displayName: 'Training Process'
-  #   jobs:
-  #     - template: templates/training.yml
+  - stage: TrainModel
+    # dependsOn: DataValidation
+    displayName: 'Training Process'
+    jobs:
+      - template: templates/training.yml
 
 
-  # - stage: RegisterModel
-  #   # dependsOn: TrainModel
-  #   displayName: 'Model registering'
-  #   jobs:
-  #     - template: templates/register_model.yml
+  - stage: RegisterModel
+    # dependsOn: TrainModel
+    displayName: 'Model registering'
+    jobs:
+      - template: templates/register_model.yml
 
   - stage: DownloadModel
     # dependsOn: RegisterModel
     displayName: 'Model download'
     jobs:
       - template: templates/download_model.yml
-
-
-  # - stage: AssignAcrPullRole
-  #   # dependsOn: DownloadModel
-  #   displayName: 'Assign ACR Pull Role to ML Workspace Identity'
-  #   jobs:
-  #     - template: templates/assign_acr_pull_role.yml
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
   - stage: BuildDockerImage    
     # dependsOn: AssignAcrPullRole  
@@ -109,7 +66,6 @@ stages:
     jobs:
       - template: templates/docker_build_np.yml
 
-
   - stage: AcrAdminLogin    
     # dependsOn: BuildDockerImage  
     displayName: 'Login to ACR Using Admin Credentials'
@@ -117,10 +73,24 @@ stages:
     jobs:
       - template: templates/acr_admin_login.yml
 
-
   - stage: DockerTagAndPush    
     # dependsOn: AcrAdminLogin  
     displayName: 'Tag and Push Docker Image to ACR'
 
     jobs:
       - template: templates/docker_tag_and_push.yml
+
+
+  - stage: AssignAcrPullRole
+    # dependsOn: DownloadModel
+    displayName: 'Assign ACR Pull Role to ML Workspace Identity'
+    jobs:
+      - template: templates/assign_acr_pull_role.yml
+
+
+  # # NEW DEPLOYMENT STAGES
+  # - stage: AttachAcrToAks
+  #   # dependsOn: DockerTagAndPush
+  #   displayName: 'Attach ACR to AKS Cluster'
+  #   jobs:
+  #     - template: templates/attach_acr_to_aks.yml

@@ -37,8 +37,8 @@ COPY ../src/fastapi_app_np.py .
 # Copy AnomaVision package (required for the app)
 COPY ../src/static/anodet ./static/anodet
 
-# Create directories for model files
-RUN mkdir -p distributions
+# # Create directories for model files
+# RUN mkdir -p distributions
 
 # Copy model files if they exist (optional - can be mounted as volumes)
 COPY ../models/padim_model.onnx . 
@@ -63,10 +63,15 @@ CMD ["python", "-m", "uvicorn", "fastapi_app_np:app", "--host", "0.0.0.0", "--po
 
 
 
-# docker build --no-cache -t fastapi-anomavision:np -f docker/Dockerfile.np .
+# docker build --no-cache -t fastapi-anomavision:latest -f docker/Dockerfile.np .
 
 # docker run -d `
 # --name fastapi-app `
 # -p 8080:8080 `
 # --restart unless-stopped `
-# fastapi-anomavision:np
+# fastapi-anomavision:latest
+
+# Tag and push into docker hub
+
+# docker tag fastapi-anomavision:latest deepknowledge/fastapi-anomavision:latest
+# docker push deepknowledge/fastapi-anomavision:latest
