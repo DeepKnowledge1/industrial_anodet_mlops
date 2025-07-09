@@ -88,9 +88,14 @@ stages:
       - template: templates/assign_acr_pull_role.yml
 
 
-  # # NEW DEPLOYMENT STAGES
   # - stage: AttachAcrToAks
   #   # dependsOn: DockerTagAndPush
   #   displayName: 'Attach ACR to AKS Cluster'
   #   jobs:
   #     - template: templates/attach_acr_to_aks.yml
+      
+  # - stage: DeployAcrToAks
+  #   dependsOn: AttachAcrToAks
+  #   displayName: 'Deploy ACR Image to AKS'
+  #   jobs:
+  #     - template: templates/deploy_acr_to_aks.yml

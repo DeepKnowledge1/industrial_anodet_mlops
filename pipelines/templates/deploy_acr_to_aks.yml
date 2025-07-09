@@ -1,0 +1,115 @@
+parameters: {}
+jobs:
+  - job: DeployAcrToAks
+    displayName: "Deploy ACR Image to AKS"
+    steps:
+      - task: AzureCLI@2
+        displayName: "Get AKS Credentials"
+        inputs:
+          azureSubscription: mlops_anomaly_detection
+          scriptType: ps
+          scriptLocation: inlineScript
+          inlineScript: |
+            Write-Output "Getting AKS credentials..."
+            
+            az aks get-credentials `
+              --name $(AKS_NAME) `
+              --resource-group $(RESOURCE_GROUP) `
+              --overwrite-existing
+            
+            Write-Output "AKS credentials configured!"
+
+      - task: AzureCLI@2
+        displayName: "Create Kubernetes Deployment"
+        inputs:
+          azureSubscription: mlops_anomaly_detection
+          scriptType: ps
+          scriptLocation: inlineScript
+          inlineScript: |          
+            Write-Output "Applying deployment to AKS..."
+            kubectl apply -f k8s/deployment.yml
+            
+            Write-Output "Deployment created successfully!"
+
+      - task: AzureCLI@2
+        displayName: "Create and Expose Service"
+        inputs:
+          azureSubscription: mlops_anomaly_detection
+          scriptType: ps
+          scriptLocation: inlineScript
+          inlineScript: |
+            Write-Output "Applying service to AKS..."
+            kubectl apply -f k8s/service.yml
+            
+            Write-Output "Service created successfully!"
+
+      - task: AzureCLI@2
+        displayName: "Get External IP and Service Details"
+        inputs:
+          azureSubscription: mlops_anomaly_detection
+          scriptType: ps
+          scriptLocation: inlineScript
+          inlineScript: |
+            Write-Output "Waiting for external IP assignment..."
+            
+            # Wait for external IP (timeout after 5 minutes)
+            $timeout = 300
+            $elapsed = 0
+            $externalIp = $null
+            
+            while ($elapsed -lt $timeout -and $externalIp -eq $null) {
+                Start-Sleep -Seconds 15
+                $elapsed += 15
+                
+                $service = kubectl get service fastapi-anomavision-service -o json | ConvertFrom-Json
+                
+                if ($service.status.loadBalancer.ingress) {
+                    $externalIp = $service.status.loadBalancer.ingress[0].ip
+                    Write-Output "External IP assigned: $externalIp"
+                    break
+                } else {
+                    Write-Output "Still waiting for external IP... ($elapsed seconds elapsed)"
+                }
+            }
+            
+            if ($externalIp) {
+                Write-Output ""
+                Write-Output "=== DEPLOYMENT SUCCESSFUL ==="
+                Write-Output "External IP: $externalIp"
+                Write-Output "API Base URL: http://$externalIp"
+                Write-Output "Health Check: http://$externalIp/health"
+                Write-Output "API Docs: http://$externalIp/docs"
+                Write-Output "Prediction Endpoint: http://$externalIp/predict"
+                Write-Output ""
+                Write-Output "Test with curl:"
+                Write-Output "curl http://$externalIp/health"
+                
+                # Set pipeline variable
+                Write-Output "##vso[task.setvariable variable=EXTERNAL_IP;isOutput=true]$externalIp"
+            } else {
+                Write-Output "⚠️  External IP not assigned within timeout. Check AKS LoadBalancer configuration."
+                Write-Output "You can check later with: kubectl get service fastapi-anomavision-service"
+            }
+
+      - task: AzureCLI@2
+        displayName: "Show Deployment Status"
+        inputs:
+          azureSubscription: mlops_anomaly_detection
+          scriptType: ps
+          scriptLocation: inlineScript
+          inlineScript: |
+            Write-Output "=== DEPLOYMENT STATUS ==="
+
+            Write-Output "Deployments:"
+            kubectl get deployments
+                        
+            Write-Output "Pods:"
+            kubectl get pods
+            
+            Write-Output ""
+            Write-Output "Services:"
+            kubectl get services
+            
+            Write-Output ""
+            Write-Output "Deployment Details:"
+            kubectl describe deployment fastapi-anomavision

@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+
+kind: Deployment
+
+metadata:
+   name: anomavision-deploy
+   labels:
+     app: anomavision
+     type: FastAPI
+
+spec:
+   template:
+    metadata:
+      name: anomavision-repl
+      labels:
+        app: anomavision
+        type: FastAPI
+
+    spec:
+      containers:
+      - name: anomavision
+        image: acranomavision.azurecr.io/fastapi-anomavision:latest
+        # image: deepknowledge/fastapi-anomavision:latest
+
+        ports:
+          - containerPort: 8080
+      imagePullSecrets:
+      - name: acr-secret
+   
+   replicas: 1
+   selector:
+      matchLabels: 
+        app: anomavision
+        type: FastAPI
