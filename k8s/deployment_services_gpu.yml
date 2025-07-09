@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: anomavision-deploy
+  labels:
+    app: anomavision
+    type: FastAPI
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: anomavision
+      type: FastAPI
+  template:
+    metadata:
+      name: anomavision-repl
+      labels:
+        app: anomavision
+        type: FastAPI
+    spec:
+      containers:
+      - name: anomavision
+        image: acranomavision.azurecr.io/fastapi-anomavision:latest
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            nvidia.com/gpu: 1  # Request 1 GPU
+          limits:
+            nvidia.com/gpu: 1  # Limit to 1 GPU
+        env:
+        - name: NVIDIA_VISIBLE_DEVICES
+          value: "all"
+        - name: NVIDIA_DRIVER_CAPABILITIES
+          value: "compute,utility"
+      imagePullSecrets:
+      - name: acr-secret
+      # Add toleration if GPU nodes have taints
+      tolerations:
+      - key: "nvidia.com/gpu"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      # Optional: Node selector to ensure pod runs on GPU nodes
+      nodeSelector:
+        accelerator: nvidia-tesla-v100
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: anomavision-service
+  labels:
+    app: anomavision
+    type: FastAPI
+spec:
+  selector:
+    app: anomavision
+    type: FastAPI
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+  type: LoadBalancer  # or ClusterIP for internal access
