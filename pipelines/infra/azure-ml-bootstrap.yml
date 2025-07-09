@@ -169,6 +169,18 @@ stages:
             --resource-group $(RESOURCE_GROUP) `
             --workspace-name $(WORKSPACE)
 
+          ## in case you want to use GPU
+
+          # az ml compute create `
+          #     --name $(COMPUTE_NAME) `
+          #     --type AmlCompute `
+          #     --size Standard_NV6 `
+          #     --min-instances 0 `
+          #     --max-instances 1 `
+          #     --idle-time-before-scale-down 120 `
+          #     --resource-group $(RESOURCE_GROUP) `
+          #     --workspace-name $(WORKSPACE)
+
     - task: AzureCLI@2
       displayName: 'Step 8 - Upload Training Images to ML Dataset'
       inputs:

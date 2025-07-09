@@ -66,3 +66,8 @@ junit/
 # pipelines/templates/docker_tag_and_push.yml
 monitoring/prometheus.yml
 docker-compose.yml
+deployment/deployment-config.yml
+deployment/endpoint-config.yml
+pipelines/templates/create_deployment.yml
+pipelines/templates/create_endpoint.yml
+src/score.py

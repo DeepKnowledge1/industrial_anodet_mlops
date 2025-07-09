@@ -1,7 +1,9 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from pydantic import BaseModel
 import uvicorn
-import onnxruntime
+import onnxruntime as ort
+from onnxruntime import SessionOptions, GraphOptimizationLevel
+import multiprocessing
 import numpy as np
 from PIL import Image
 import io
@@ -21,9 +23,34 @@ RESIZE_SIZE = (224, 224)
 async def load_model():
     global sess, padim_model
     try:
+        # Get the list of available execution providers (e.g., CPUExecutionProvider, CUDAExecutionProvider)
+        available_providers = ort.get_available_providers()
+        # Check if CUDA (GPU) is available by looking for the CUDAExecutionProvider
+        use_gpu = "CUDAExecutionProvider" in available_providers
+        
+        # Create session options for ONNX Runtime
+        sess_options = SessionOptions()
+
+        # Enable memory pattern optimization to improve performance on repeated inference calls
+        sess_options.enable_mem_pattern = True
+
+        # Enable graph optimization to apply advanced model graph transformations
+        sess_options.graph_optimization_level = GraphOptimizationLevel.ORT_ENABLE_EXTENDED
+
+        # These two options are useful only when using CPU
+        if not use_gpu:
+            # Enable memory arena for CPU allocator to optimize memory usage
+            sess_options.enable_cpu_mem_arena = True
+
+            # Set the number of threads ONNX Runtime can use for CPU operations
+            sess_options.intra_op_num_threads = multiprocessing.cpu_count()
+
+        # Set the preferred execution provider based on hardware availability
+        providers = ["CUDAExecutionProvider"] if use_gpu else ["CPUExecutionProvider"]        
+        
         # Try to load ONNX model first
         if os.path.exists("padim_model.onnx"):
-            sess = onnxruntime.InferenceSession("padim_model.onnx")
+            sess = ort.InferenceSession("padim_model.onnx", providers=providers, sess_options=sess_options)                                
             print("ONNX model loaded successfully.")
         else:
             raise FileNotFoundError("No model found. Please ensure 'padim_model.onnx' ")
@@ -311,6 +338,6 @@ async def get_model_info():
 if __name__ == "__main__":
     # Use string import for proper reload functionality
     uvicorn.run("fastapi_app_np:app", host="0.0.0.0", port=8080, reload=False)
-    
+# run that from the Docker image,  see docker\Dockerfile.np   
 
 
