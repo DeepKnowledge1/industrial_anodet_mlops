@@ -166,10 +166,8 @@ stages:
   dependsOn: PostDeploymentTests
   condition: eq('${{ parameters.deployAcrToAks }}', false)
   jobs:
-    - deployment: ManualApproval
-      displayName: 'Approve Production Deployment'
-      strategy:
-        runOnce:
-          deploy:
-            steps:
-              - script: echo "Deployment approved"
+    - job: ManualApproval
+      steps:
+        - task: ManualValidation@0
+          inputs:
+            instructions: 'Approve production deployment.'
