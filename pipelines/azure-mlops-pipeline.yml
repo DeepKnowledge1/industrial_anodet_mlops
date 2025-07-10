@@ -164,18 +164,12 @@ stages:
 - stage: ApproveDeployment
   displayName: 'Manual Approval Before Production Deployment'
   dependsOn: PostDeploymentTests
-  # This condition seems incorrect, as it would skip the approval if you ARE deploying.
-  # You might want to review this logic. It's kept as-is in this correction.
   condition: eq('${{ parameters.deployAcrToAks }}', false)
   jobs:
-  # Change from 'job:' to 'deployment:'
-  - deployment: ManualApproval
-    displayName: 'Manual Approval'
-    environment: 'Production' # A deployment job requires an environment
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-          - task: ManualValidation@0
-            inputs:
-              instructions: 'Approve production deployment.'
+    - job: ManualApproval
+      pool: server  # This is the key - agentless job
+      steps:
+        - task: ManualValidation@0
+          inputs:
+            instructions: 'Approve production deployment.'
+            onTimeout: 'reject'
