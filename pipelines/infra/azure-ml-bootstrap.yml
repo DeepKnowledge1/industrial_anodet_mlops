@@ -79,42 +79,42 @@ stages:
     #         --name "ssl-key-pem" `
     #         --file $(SSL_KEY_PATH)          
 
-    - task: AzureCLI@2
-      displayName: 'Step 3 - Create Azure Container Registry (ACR)'
-      inputs:
-        azureSubscription: mlops_anomaly_detection
-        scriptType: ps
-        scriptLocation: inlineScript
-        inlineScript: |
-
-          az acr create `
-              --resource-group $(RESOURCE_GROUP) `
-              --name $(ACR_NAME) `
-              --sku Basic `
-              --location $(LOCATION) `
-              --admin-enabled true
-
-
     # - task: AzureCLI@2
-    #   displayName: 'Step 4 - Create AKS Cluster'
+    #   displayName: 'Step 3 - Create Azure Container Registry (ACR)'
     #   inputs:
     #     azureSubscription: mlops_anomaly_detection
     #     scriptType: ps
     #     scriptLocation: inlineScript
     #     inlineScript: |
 
-    #       az aks create `
-    #         --resource-group $(RESOURCE_GROUP) `
-    #         --name $(AKS_NAME) `
-    #         --enable-cluster-autoscaler `
-    #         --min-count 1 `
-    #         --max-count 2 `
-    #         --node-count 2 `
-    #         --node-vm-size Standard_DS3_v2 `
-    #         --enable-managed-identity `
-    #         --generate-ssh-keys `
-    #         --enable-addons monitoring `
-    #         --load-balancer-idle-timeout 4
+    #       az acr create `
+    #           --resource-group $(RESOURCE_GROUP) `
+    #           --name $(ACR_NAME) `
+    #           --sku Basic `
+    #           --location $(LOCATION) `
+    #           --admin-enabled true
+
+
+    - task: AzureCLI@2
+      displayName: 'Step 4 - Create AKS Cluster'
+      inputs:
+        azureSubscription: mlops_anomaly_detection
+        scriptType: ps
+        scriptLocation: inlineScript
+        inlineScript: |
+
+          az aks create `
+            --resource-group $(RESOURCE_GROUP) `
+            --name $(AKS_NAME) `
+            --enable-cluster-autoscaler `
+            --min-count 1 `
+            --max-count 2 `
+            --node-count 2 `
+            --node-vm-size Standard_DS3_v2 `
+            --enable-managed-identity `
+            --generate-ssh-keys `
+            --enable-addons monitoring `
+            --load-balancer-idle-timeout 4
 
       # ####   If you want to use GPU
       #     az aks create `
@@ -137,39 +137,39 @@ stages:
 
 
 
-    # - task: AzureCLI@2
-    #   displayName: 'Step 5 - Create k8s-extension'
-    #   inputs:
-    #     azureSubscription: mlops_anomaly_detection
-    #     scriptType: ps
-    #     scriptLocation: inlineScript
-    #     inlineScript: |
+    - task: AzureCLI@2
+      displayName: 'Step 5 - Create k8s-extension'
+      inputs:
+        azureSubscription: mlops_anomaly_detection
+        scriptType: ps
+        scriptLocation: inlineScript
+        inlineScript: |
 
-    #       az k8s-extension create `
-    #           --name azureml `
-    #           --extension-type Microsoft.AzureML.Kubernetes `
-    #           --cluster-type managedClusters `
-    #           --cluster-name $(AKS_NAME) `
-    #           --resource-group $(RESOURCE_GROUP) `
-    #           --configuration-settings enableInference=True inferenceRouterServiceType=loadBalancer sslCname=your.domain.com `
-    #           --config-protected-settings sslCertPemFile=$(SSL_CERT_PATH) sslKeyPemFile=$(SSL_KEY_PATH)
+          az k8s-extension create `
+              --name azureml `
+              --extension-type Microsoft.AzureML.Kubernetes `
+              --cluster-type managedClusters `
+              --cluster-name $(AKS_NAME) `
+              --resource-group $(RESOURCE_GROUP) `
+              --configuration-settings enableInference=True inferenceRouterServiceType=loadBalancer sslCname=your.domain.com `
+              --config-protected-settings sslCertPemFile=$(SSL_CERT_PATH) sslKeyPemFile=$(SSL_KEY_PATH)
 
-    # - task: AzureCLI@2
-    #   displayName: 'Step 6 - Attach AKS to Azure ML Workspace'
-    #   inputs:
-    #     azureSubscription: mlops_anomaly_detection
-    #     scriptType: ps
-    #     scriptLocation: inlineScript
-    #     inlineScript: |
+    - task: AzureCLI@2
+      displayName: 'Step 6 - Attach AKS to Azure ML Workspace'
+      inputs:
+        azureSubscription: mlops_anomaly_detection
+        scriptType: ps
+        scriptLocation: inlineScript
+        inlineScript: |
 
-    #       az ml compute attach `
-    #         --resource-group $(RESOURCE_GROUP) `
-    #         --workspace-name $(WORKSPACE) `
-    #         --type Kubernetes `
-    #         --name $(ML_AKS_NAME) `
-    #         --resource-id $(az aks show --name $(AKS_NAME) --resource-group $(RESOURCE_GROUP) --query id -o tsv) `
-    #         --identity-type SystemAssigned `
-    #         --namespace azureml
+          az ml compute attach `
+            --resource-group $(RESOURCE_GROUP) `
+            --workspace-name $(WORKSPACE) `
+            --type Kubernetes `
+            --name $(ML_AKS_NAME) `
+            --resource-id $(az aks show --name $(AKS_NAME) --resource-group $(RESOURCE_GROUP) --query id -o tsv) `
+            --identity-type SystemAssigned `
+            --namespace azureml
 
 
     - task: AzureCLI@2

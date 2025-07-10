@@ -1,0 +1,13 @@
+$schema: https://azuremlschemas.azureedge.net/latest/kubernetesOnlineEndpoint.schema.json
+name: anomavision-endpoint
+compute: ws-anom-aks  # Must be attached to the workspace
+auth_mode: key
+
+description: "Kubernetes Online Endpoint for PaDiM-based Anomaly Detection on AKS"
+
+tags:
+  project: "anomavision"
+  environment: "production"
+  model_type: "padim"
+  owner: "ml-team"
+  team: "vision-ai"

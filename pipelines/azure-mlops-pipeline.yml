@@ -53,39 +53,39 @@ stages:
     jobs:
       - template: templates/register_model.yml
 
-  - stage: DownloadModel
-    # dependsOn: RegisterModel
-    displayName: 'Model download'
-    jobs:
-      - template: templates/download_model.yml
+  # - stage: DownloadModel
+  #   # dependsOn: RegisterModel
+  #   displayName: 'Model download'
+  #   jobs:
+  #     - template: templates/download_model.yml
 
-  - stage: BuildDockerImage    
-    # dependsOn: AssignAcrPullRole  
-    displayName: 'Build Docker Image (FastAPI + NumPy)'
+  # - stage: BuildDockerImage    
+  #   # dependsOn: AssignAcrPullRole  
+  #   displayName: 'Build Docker Image (FastAPI + NumPy)'
 
-    jobs:
-      - template: templates/docker_build_np.yml
+  #   jobs:
+  #     - template: templates/docker_build_np.yml
 
-  - stage: AcrAdminLogin    
-    # dependsOn: BuildDockerImage  
-    displayName: 'Login to ACR Using Admin Credentials'
+  # - stage: AcrAdminLogin    
+  #   # dependsOn: BuildDockerImage  
+  #   displayName: 'Login to ACR Using Admin Credentials'
 
-    jobs:
-      - template: templates/acr_admin_login.yml
+  #   jobs:
+  #     - template: templates/acr_admin_login.yml
 
-  - stage: DockerTagAndPush    
-    # dependsOn: AcrAdminLogin  
-    displayName: 'Tag and Push Docker Image to ACR'
+  # - stage: DockerTagAndPush    
+  #   # dependsOn: AcrAdminLogin  
+  #   displayName: 'Tag and Push Docker Image to ACR'
 
-    jobs:
-      - template: templates/docker_tag_and_push.yml
+  #   jobs:
+  #     - template: templates/docker_tag_and_push.yml
 
 
-  - stage: AssignAcrPullRole
-    # dependsOn: DownloadModel
-    displayName: 'Assign ACR Pull Role to ML Workspace Identity'
-    jobs:
-      - template: templates/assign_acr_pull_role.yml
+  # - stage: AssignAcrPullRole
+  #   # dependsOn: DownloadModel
+  #   displayName: 'Assign ACR Pull Role to ML Workspace Identity'
+  #   jobs:
+  #     - template: templates/assign_acr_pull_role.yml
 
 
   # - stage: AttachAcrToAks
@@ -100,8 +100,14 @@ stages:
   #   jobs:
   #     - template: templates/deploy_acr_to_aks.yml
 
-  - stage: CreatEndPoint
+  - stage: CreateEndPoint
     # dependsOn: AssignAcrPullRole
     displayName: 'Deploy ACR Image to AKS'
     jobs:
       - template: templates/create_endpoint.yml
+
+  - stage: DeployEndpoint
+    # dependsOn: CreateEndPoint
+    displayName: 'Deploy ACR Image to AKS'
+    jobs:
+      - template: templates/create_deployment.yml      
