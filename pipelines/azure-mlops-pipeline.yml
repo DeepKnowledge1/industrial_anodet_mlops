@@ -169,6 +169,6 @@ stages:
   jobs:
     - job: ManualApproval
       steps:
-        - task: ManualValidation@0.1
+        - task: ManualValidation@0
           inputs:
             instructions: 'Approve production deployment.'
