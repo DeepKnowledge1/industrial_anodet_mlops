@@ -159,7 +159,6 @@ stages:
   jobs:
     - template: templates/post_deployment_tests.yml
 
-
 # ---------------------- Approval ----------------------
 
 - stage: ApproveDeployment
