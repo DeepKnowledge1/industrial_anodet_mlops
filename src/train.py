@@ -18,11 +18,12 @@ import logging
 
 os.environ.pop("MLFLOW_RUN_ID", None)  # Remove Azure-injected env var
 
+from logger import setup_logging
 
+setup_logging()
+# Now use the logger
+logger = logging.getLogger("industrial-mlops")
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Train a PaDiM model for anomaly detection with MLflow tracking.")
@@ -209,7 +210,7 @@ def main(args):
         test_path = os.path.dirname(DATASET_PATH)
         class_name = os.path.basename(DATASET_PATH)
         
-        test_path = args.test_dataset_path or DATASET_PATH
+        # test_path = args.test_dataset_path or DATASET_PATH
         try:
             # Try to load as MVTec dataset for evaluation
             test_dataset = anodet.MVTecDataset(test_path, class_name=class_name, is_train=False)
