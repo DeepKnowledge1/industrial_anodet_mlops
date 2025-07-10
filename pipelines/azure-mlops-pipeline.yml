@@ -1,3 +1,10 @@
+# when starting the pipeline in the Azure DevOps UI, you'll be asked to check/uncheck "Deploy ACR to AKS?".
+parameters:
+  - name: deployAcrToAks
+    displayName: 'Deploy ACR to AKS?'
+    type: boolean
+    default: false
+
 trigger:
   - main
 
@@ -6,12 +13,6 @@ pool:
 
 
 
-# when starting the pipeline in the Azure DevOps UI, you'll be asked to check/uncheck "Deploy ACR to AKS?".
-parameters:
-  - name: deployAcrToAks
-    displayName: 'Deploy ACR to AKS?'
-    type: boolean
-    default: false
 
 variables:
   - group: mlops-azure-components
