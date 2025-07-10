@@ -1,0 +1,38 @@
+parameters: {}
+
+jobs:
+  - job: CreateEndpoint
+    displayName: "Create Azure ML Online Endpoint"
+    steps:
+      - task: AzureCLI@2
+        displayName: "Create Online Endpoint"
+        inputs:
+          azureSubscription: mlops_anomaly_detection
+          scriptType: ps
+          scriptLocation: inlineScript
+          inlineScript: |
+            Write-Output "Creating Azure ML Online Endpoint..."
+            
+            # Create the endpoint using the existing endpoint-config.yml file
+            az ml online-endpoint create `
+              --file ./deployment/endpoint-config.yml `
+              --resource-group $(RESOURCE_GROUP) `
+              --workspace-name $(WORKSPACE)
+            
+            Write-Output "Online endpoint created successfully!"
+            
+      - task: AzureCLI@2
+        displayName: "Verify Endpoint Creation"
+        inputs:
+          azureSubscription: mlops_anomaly_detection
+          scriptType: ps
+          scriptLocation: inlineScript
+          inlineScript: |
+            Write-Output "Verifying endpoint creation..."
+            
+            az ml online-endpoint show `
+              --name anomavision-endpoint `
+              --resource-group $(RESOURCE_GROUP) `
+              --workspace-name $(WORKSPACE)
+            
+            Write-Output "Endpoint verification complete!"

@@ -99,3 +99,9 @@ stages:
   #   displayName: 'Deploy ACR Image to AKS'
   #   jobs:
   #     - template: templates/deploy_acr_to_aks.yml
+
+  - stage: CreatEndPoint
+    # dependsOn: AssignAcrPullRole
+    displayName: 'Deploy ACR Image to AKS'
+    jobs:
+      - template: templates/create_endpoint.yml

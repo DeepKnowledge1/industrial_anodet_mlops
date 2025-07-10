@@ -1,0 +1,5 @@
+$schema: https://azuremlschemas.azureedge.net/latest/kubernetesOnlineEndpoint.schema.json
+name: anomavision-endpoint
+compute: ws-anom-aks  # Must be attached to the workspace
+auth_mode: key
+description: Deploying AnomaVision model to AKS using Kubernetes endpoint
