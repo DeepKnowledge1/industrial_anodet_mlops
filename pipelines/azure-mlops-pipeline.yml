@@ -5,6 +5,7 @@ parameters:
     type: boolean
     default: false
 
+
 trigger:
   - main
 
@@ -136,7 +137,7 @@ stages:
 
 - stage: CreateEndpoint
   displayName: 'Create Inference Endpoint'
-  dependsOn: DeployAcrToAks
+  dependsOn: DownloadModel
   condition: eq('${{ parameters.deployAcrToAks }}', false)
   jobs:
     - template: templates/create_endpoint.yml
