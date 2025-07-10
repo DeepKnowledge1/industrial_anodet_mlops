@@ -163,17 +163,12 @@ stages:
 # ---------------------- Approval ----------------------
 
 - stage: ApproveDeployment
-  displayName: Manual Approval Before Production Deployment
+  displayName: 'Manual Approval Before Production Deployment'
   dependsOn: PostDeploymentTests
   condition: eq('${{ parameters.deployAcrToAks }}', false)
   jobs:
-  - deployment: ManualApproval
-    displayName: Manual Approval
-    environment: approval-env
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-          - task: ManualValidation@0
-            inputs:
-              instructions: Approve production deployment.
+    - job: ManualApproval
+      steps:
+        - task: ManualValidation@0.1
+          inputs:
+            instructions: 'Approve production deployment.'
