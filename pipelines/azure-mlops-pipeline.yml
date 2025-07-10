@@ -168,7 +168,6 @@ stages:
   jobs:
     - deployment: ManualApproval
       displayName: 'Approve Production Deployment'
-      environment: 'production'  # Configure approvals on this environment
       strategy:
         runOnce:
           deploy:
