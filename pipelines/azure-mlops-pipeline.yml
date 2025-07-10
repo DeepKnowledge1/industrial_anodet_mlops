@@ -162,13 +162,16 @@ stages:
 
 # ---------------------- Approval ----------------------
 
-- stage: ApproveDeployment
-  displayName: 'Manual Approval Before Production Deployment'
-  dependsOn: PostDeploymentTests
-  condition: eq('${{ parameters.deployAcrToAks }}', false)
-  jobs:
-    - job: ManualApproval
-      steps:
-        - task: ManualValidation@0
-          inputs:
-            instructions: 'Approve production deployment.'
+stage: ApproveDeployment 
+displayName: 'Manual Approval Before Production Deployment' 
+dependsOn: PostDeploymentTests 
+condition: eq('${{ parameters.deployAcrToAks }}', false) 
+jobs:
+- job: ManualApproval 
+  steps:
+  - task: ManualValidation@0
+    inputs:
+      instructions: 'Approve production deployment.'
+      notifyUsers: |
+        deepp.knowledge@gmail.com        
+      onTimeout: 'reject'
