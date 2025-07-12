@@ -63,3 +63,4 @@ junit/
 monitoring/prometheus.yml
 docker-compose.yml
 logs/
+doc/banner2.png
