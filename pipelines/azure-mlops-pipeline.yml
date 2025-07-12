@@ -84,7 +84,7 @@ stages:
 - stage: BuildDockerImage
   displayName: 'Build Docker Image (FastAPI + NumPy)'
   dependsOn: DownloadModel
-  condition: eq('${{ parameters.deployAcrToAks }}', true)
+  condition: and(succeeded(), eq(${{ parameters.deployAcrToAks }}, true))
   jobs:
     - template: templates/docker_build_np.yml
 
@@ -93,7 +93,7 @@ stages:
 - stage: AcrAdminLogin
   displayName: 'Login to ACR Using Admin Credentials'
   dependsOn: BuildDockerImage
-  condition: eq('${{ parameters.deployAcrToAks }}', true)
+  condition: and(succeeded(), eq(${{ parameters.deployAcrToAks }}, true))
   jobs:
     - template: templates/acr_admin_login.yml
 
@@ -102,7 +102,7 @@ stages:
 - stage: DockerTagAndPush
   displayName: 'Tag and Push Docker Image to ACR'
   dependsOn: AcrAdminLogin
-  condition: eq('${{ parameters.deployAcrToAks }}', true)
+  condition: and(succeeded(), eq(${{ parameters.deployAcrToAks }}, true))
   jobs:
     - template: templates/docker_tag_and_push.yml
 
@@ -111,7 +111,7 @@ stages:
 - stage: AssignAcrPullRole
   displayName: 'Assign ACR Pull Role to ML Workspace Identity'
   dependsOn: DockerTagAndPush
-  condition: eq('${{ parameters.deployAcrToAks }}', true)
+  condition: and(succeeded(), eq(${{ parameters.deployAcrToAks }}, true))
   jobs:
     - template: templates/assign_acr_pull_role.yml
 
@@ -120,7 +120,7 @@ stages:
 - stage: AttachAcrToAks
   displayName: 'Attach ACR to AKS Cluster'
   dependsOn: AssignAcrPullRole
-  condition: eq('${{ parameters.deployAcrToAks }}', true)
+  condition: and(succeeded(), eq(${{ parameters.deployAcrToAks }}, true))
   jobs:
     - template: templates/attach_acr_to_aks.yml
 
@@ -129,7 +129,7 @@ stages:
 - stage: DeployAcrToAks
   displayName: 'Deploy Docker Image to AKS'
   dependsOn: AttachAcrToAks
-  condition: eq('${{ parameters.deployAcrToAks }}', true)
+  condition: and(succeeded(), eq(${{ parameters.deployAcrToAks }}, true))
   jobs:
     - template: templates/deploy_acr_to_aks.yml
 
@@ -138,7 +138,7 @@ stages:
 - stage: CreateEndpoint
   displayName: 'Create Inference Endpoint'
   dependsOn: DownloadModel
-  condition: eq('${{ parameters.deployAcrToAks }}', false)
+  condition: and(succeeded(), eq(${{ parameters.deployAcrToAks }}, false))
   jobs:
     - template: templates/create_endpoint.yml
 
@@ -147,17 +147,16 @@ stages:
 - stage: DeployEndpoint
   displayName: 'Deploy Model to Endpoint'
   dependsOn: CreateEndpoint
-  condition: eq('${{ parameters.deployAcrToAks }}', false)
+  condition: and(succeeded(), eq(${{ parameters.deployAcrToAks }}, false))
   jobs:
     - template: templates/create_deployment.yml
 
 # ---------------------- Post-Deployment Tests ----------------------
-
-
+  
 - stage: PostDeploymentTests
   displayName: 'Run Post-Deployment Unit Tests'
   dependsOn: DeployEndpoint
-  condition: eq('${{ parameters.deployAcrToAks }}', false)
+  condition: and(succeeded(), eq(${{ parameters.deployAcrToAks }}, false))
   jobs:
     - template: templates/post_deployment_tests.yml
 
@@ -166,7 +165,7 @@ stages:
 - stage: ApproveDeployment
   displayName: 'Manual Approval Before Production Deployment'
   dependsOn: PostDeploymentTests
-  condition: eq('${{ parameters.deployAcrToAks }}', false)
+  condition: and(succeeded(), eq(${{ parameters.deployAcrToAks }}, false))
   jobs:
     - job: ManualApproval
       pool: server  # This is the key - agentless job
