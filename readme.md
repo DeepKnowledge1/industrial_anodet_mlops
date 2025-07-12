@@ -1,10 +1,8 @@
 
 
 # 🤖 AnomaVision AI – Industrial-Grade MLOps Pipeline 🔥
-<center>
 
-<img src="doc/banner3.png" alt="Industrial Defect Detection with MLOps"  />
-</center>
+![Example](doc/banner3.png)
 
 
 > **A complete end-to-end MLOps system for real-time anomaly detection using FastAPI, ONNX, Azure ML, AKS, Docker & Kubernetes. Built for scalability, performance, and production-readiness.**
