@@ -185,7 +185,7 @@ pytest tests/test_padim.py
 To containerize your FastAPI application, build the Docker image:
 
 ```bash
-docker build -f docker/Dockerfile.inference -t fastapi-anomavision:latest .
+docker build -f docker/Dockerfile.np -t fastapi-anomavision:latest .
 ```
 
 Then, tag the image for your container registry (e.g., Docker Hub or Azure Container Registry):
