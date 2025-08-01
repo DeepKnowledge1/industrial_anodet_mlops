@@ -1,0 +1,20 @@
+jobs:
+- job: RegisterModel  
+  displayName: "Register Model in Azure ML"
+  steps:
+    - task: AzureCLI@2
+      displayName: "Register the Model"
+      inputs:
+        azureSubscription: mlops_anomaly_detection
+        scriptType: ps
+        scriptLocation: inlineScript
+        inlineScript: |
+          $jobName = "training-anomavision"          
+          az ml model create `
+            --name anomavision_model `
+            --version 1 `
+            --path "azureml://jobs/$jobName/outputs/model_output" `
+            --type custom_model `
+            --description "PaDiM anomaly detection model" `
+            --resource-group $(RESOURCE_GROUP) `
+            --workspace-name $(WORKSPACE)

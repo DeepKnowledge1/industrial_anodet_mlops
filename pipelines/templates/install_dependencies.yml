@@ -1,0 +1,10 @@
+
+steps:
+
+  # Install Poetry dependencies, including dev dependencies
+  - script: |
+      echo "Installing Poetry dependencies..."
+      poetry install --with dev
+    displayName: 'Install Poetry Dependencies'
+    workingDirectory: $(Build.SourcesDirectory)
+    continueOnError: false

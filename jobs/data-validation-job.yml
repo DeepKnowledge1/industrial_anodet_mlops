@@ -1,0 +1,29 @@
+# data-validation-job.yml
+$schema: https://azuremlschemas.azureedge.net/latest/commandJob.schema.json
+name: padim-data-validation
+display_name: Data Validation for MVTec
+experiment_name: padim-anomaly-detection
+
+command: >-
+  conda run -n anomavision_env python data_validation.py 
+  --input-data ${{inputs.data}} 
+  --output-dir ${{outputs.result}}
+code: ../src
+environment: azureml:anomavision_env:1
+compute: azureml:compute-anomavision
+
+inputs:
+  data:
+    type: uri_folder
+    path: azureml:anomaly-images:1
+outputs:
+  result:
+    type: uri_folder
+    mode: upload
+
+# to avoid Met error <class 'KeyError'>:'mlflow.source.git.branch'
+
+properties:
+  mlflow.source.git.branch: ""
+  mlflow.source.git.repo: ""
+  mlflow.source.git.commit: ""

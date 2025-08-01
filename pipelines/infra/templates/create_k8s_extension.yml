@@ -1,0 +1,19 @@
+parameters: {}
+jobs:
+  - job: CreateK8sExtension
+    displayName: "Create Kubernetes Extension for Azure ML"
+    steps:
+      - task: AzureCLI@2
+        inputs:
+          azureSubscription: mlops_anomaly_detection
+          scriptType: ps
+          scriptLocation: inlineScript
+          inlineScript: |
+            az k8s-extension create `
+              --name azureml `
+              --extension-type Microsoft.AzureML.Kubernetes `
+              --cluster-type managedClusters `
+              --cluster-name $(AKS_NAME) `
+              --resource-group $(RESOURCE_GROUP) `
+              --configuration-settings enableInference=True inferenceRouterServiceType=loadBalancer sslCname=your.domain.com `
+              --config-protected-settings sslCertPemFile=$(SSL_CERT_PATH) sslKeyPemFile=$(SSL_KEY_PATH)

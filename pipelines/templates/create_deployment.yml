@@ -1,0 +1,59 @@
+parameters: {}
+
+jobs:
+  - job: CreateDeployment
+    displayName: "Create Azure ML Online Deployment"
+    steps:
+      - task: AzureCLI@2
+        displayName: "Create Online Deployment"
+        inputs:
+          azureSubscription: mlops_anomaly_detection
+          scriptType: ps
+          scriptLocation: inlineScript
+          inlineScript: |
+            Write-Output "Creating online deployment..."
+            
+            # Create the deployment using the existing deployment-k8s-config.yml file
+            az ml online-deployment create `
+              --file ./deployment/deployment-k8s-config.yml `
+              --resource-group $(RESOURCE_GROUP) `
+              --workspace-name $(WORKSPACE) `
+              --all-traffic
+            
+            Write-Output "Online deployment created successfully!"
+
+      - task: AzureCLI@2
+        displayName: "Get Endpoint Details and Scoring URI"
+        inputs:
+          azureSubscription: mlops_anomaly_detection
+          scriptType: ps
+          scriptLocation: inlineScript
+          inlineScript: |
+            Write-Output "Getting endpoint details..."
+            
+            # Get endpoint details
+            $endpoint = az ml online-endpoint show `
+              --name anomavision-endpoint `
+              --resource-group $(RESOURCE_GROUP) `
+              --workspace-name $(WORKSPACE) | ConvertFrom-Json
+            
+            Write-Output "=== DEPLOYMENT COMPLETE ==="
+            Write-Output "Endpoint Name: $($endpoint.name)"
+            Write-Output "Scoring URI: $($endpoint.scoring_uri)"
+            Write-Output "Authentication: $($endpoint.auth_mode)"
+            Write-Output "Status: $($endpoint.provisioning_state)"
+            
+            # # Get the authentication key
+            # $keys = az ml online-endpoint get-credentials `
+            #   --name anomavision-endpoint `
+            #   --resource-group $(RESOURCE_GROUP) `
+            #   --workspace-name $(WORKSPACE) | ConvertFrom-Json
+            
+            # Write-Output "Primary Key: $($keys.primaryKey)"
+            # Write-Output ""
+            # Write-Output "Test your endpoint with:"
+            # Write-Output "curl -X POST '$($endpoint.scoring_uri)' -H 'Authorization: Bearer $($keys.primaryKey)' -H 'Content-Type: application/json' -d '{\"data\": \"your_image_data\"}'"
+            
+            # # Set pipeline variables for other stages
+            # Write-Output "##vso[task.setvariable variable=ENDPOINT_URI;isOutput=true]$($endpoint.scoring_uri)"
+            # Write-Output "##vso[task.setvariable variable=ENDPOINT_KEY;isOutput=true]$($keys.primaryKey)"

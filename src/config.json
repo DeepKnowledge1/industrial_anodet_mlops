@@ -1,0 +1,5 @@
+{
+    "threshold": 13.0,
+    "resize_width": 224,
+    "resize_height": 224
+}

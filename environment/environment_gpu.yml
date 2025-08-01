@@ -1,0 +1,39 @@
+name: anomavision_env
+channels:
+  - defaults
+  - conda-forge
+  - pytorch
+  - nvidia
+dependencies:
+  - python=3.11
+  - pip
+  - pytorch::pytorch=2.2.0
+  - pytorch::torchvision=0.17.0
+  - pytorch::pytorch-cuda=11.8  # or 12.1 for newer GPUs
+  - pip:
+      # Core ML and Computer Vision
+      - scikit-learn==1.4.0
+      - numpy==1.26.0
+      - pandas==2.2.0
+      - opencv-python>=4.5,<5.0
+      - matplotlib==3.8.0
+      - scipy==1.12.0
+      - Pillow==10.2.0
+
+      # ONNX Support
+      - onnx==1.16.0
+      - onnxruntime-gpu==1.18.0
+
+      # API and Inference
+      - fastapi==0.111.0
+      - uvicorn[standard]==0.30.0
+
+      # MLflow (for experiment tracking and ONNX logging)
+      - mlflow==2.13.0
+
+      # Drift Detection
+      - alibi-detect==0.12.0
+
+      # Serialization and Utilities
+      - joblib==1.4.0
+      - pyyaml==6.0.1

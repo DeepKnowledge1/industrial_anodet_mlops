@@ -1,0 +1,24 @@
+parameters: {}
+jobs:
+  - job: AcrAdminLogin
+    displayName: "Login to ACR Using Admin Credentials"
+    steps:
+      - task: AzureCLI@2
+        displayName: "Get ACR Credentials and Login via Docker"
+        inputs:
+          azureSubscription: mlops_anomaly_detection
+          scriptType: ps
+          scriptLocation: inlineScript
+          inlineScript: |
+            # Get admin credentials as JSON
+            $creds = az acr credential show `
+              --name $(ACR_NAME) `
+              --resource-group $(RESOURCE_GROUP) | ConvertFrom-Json
+
+            # Extract username and password
+            $username = $creds.username
+            $password = $creds.passwords[0].value
+            
+            docker login $(ACR_NAME).azurecr.io --username $username --password $password
+
+

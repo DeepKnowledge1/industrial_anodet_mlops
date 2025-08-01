@@ -1,0 +1,43 @@
+trigger:
+  paths:
+    include:
+      - infra/
+
+pool:
+  name: Default
+
+variables:
+  - group: mlops-azure-components
+
+stages:
+  - stage: BootstrapAzureMLInfra
+    displayName: Provision Azure ML Infrastructure
+    jobs:
+      - template: templates/install_azureml_extension.yml  # Job: InstallAzureMLExtension
+      - template: templates/create_resource_group.yml      # Job: CreateResourceGroup
+        dependsOn: InstallAzureMLExtension
+      - template: templates/create_workspace.yml           # Job: CreateWorkspace
+        dependsOn: CreateResourceGroup
+      - template: templates/create_compute_cluster.yml     # Job: CreateComputeCluster
+        dependsOn: CreateWorkspace
+      - template: templates/upload_dataset.yml             # Job: UploadDataset
+        dependsOn: CreateComputeCluster
+      - template: templates/register_env.yml               # Job: RegisterEnvironment
+        dependsOn: UploadDataset
+
+  # Optional stage for ACR & Key Vault
+  # - stage: SetupKeyVaultACR
+  #   displayName: "Setup ACR and Key Vault"
+  #   condition: and(succeeded(), eq(variables['RUN_ACR'], 'true'))
+  #   jobs:
+  #     - template: templates/create_key_vault.yml
+  #     - template: templates/create_acr.yml
+
+  # # Manual/conditional AKS provisioning
+  # - stage: SetupAKSCluster
+  #   displayName: "Create and Attach AKS Cluster"
+  #   condition: and(succeeded(), eq(variables['RUN_AKS'], 'true'))
+  #   jobs:
+  #     - template: templates/create_aks.yml
+  #     - template: templates/create_k8s_extension.yml
+  #     - template: templates/attach_aks_to_workspace.yml

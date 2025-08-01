@@ -1,0 +1,23 @@
+jobs:
+- job: DownloadModel
+  displayName: "Download ONNX Model from Azure ML"
+  steps:
+    - task: AzureCLI@2
+      displayName: "Download Model via Azure CLI"
+      inputs:
+        azureSubscription: mlops_anomaly_detection
+        scriptType: ps
+        scriptLocation: inlineScript
+        inlineScript: |
+          
+          az ml model download `
+            --name "anomavision_model" `
+            --version 1 `
+            --resource-group $(RESOURCE_GROUP) `
+            --workspace-name $(WORKSPACE) `
+            --download-path "./models"
+
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathToPublish: 'models/anomavision_model/model_output'
+        artifactName: 'models'

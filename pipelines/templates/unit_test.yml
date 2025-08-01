@@ -1,0 +1,16 @@
+steps:
+
+  # Set PYTHONPATH to include the src directory and run pytest
+  - script: |
+      echo "Running tests..."
+      poetry run pytest tests/test_anomavision.py -v --doctest-modules --junitxml=junit/test-results.xml
+    displayName: 'Run pytest'
+    workingDirectory: $(Build.SourcesDirectory)
+    continueOnError: false
+
+  # Publish test results
+  - task: PublishTestResults@2
+    displayName: 'Publish Test Results'
+    inputs:
+      testResultsFiles: '**/test-results.xml'
+    condition: succeededOrFailed()

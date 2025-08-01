@@ -1,0 +1,42 @@
+parameters: {}
+jobs:
+  - job: POST_DEPLOY
+    displayName: 'Run pytest with dynamic score_uri and score_key (PowerShell)'
+    steps:
+      - task: AzureCLI@2
+        displayName: "Run pytest with dynamic score_uri and score_key"
+        inputs:
+          azureSubscription: mlops_anomaly_detection
+          scriptType: ps
+          scriptLocation: inlineScript
+          inlineScript: |
+            $score_uri = az ml online-endpoint show `
+              -g $(RESOURCE_GROUP) `
+              -w $(WORKSPACE_NAME) `
+              -n $(END_POINT_NAME) `
+              --query scoring_uri -o tsv
+
+            $score_key = az ml online-endpoint get-credentials `
+              -g $(RESOURCE_GROUP) `
+              -w $(WORKSPACE_NAME) `
+              -n $(END_POINT_NAME) `
+              --query primaryKey -o tsv
+
+            Write-Host "Running pytest with dynamic URI and key..."
+
+            pytest ./integeration/prod_test.py `
+              --doctest-modules `
+              --junitxml=junit/pro-test-results.xml `
+              --cov-report=xml `
+              --cov-report=html `
+              --score_uri $score_uri `
+              --score_key $score_key
+          workingDirectory: '$(System.DefaultWorkingDirectory)'
+      
+      # Publish test results
+      - task: PublishTestResults@2
+        displayName: 'Publish Test Results'
+        inputs:
+          testResultsFiles: '**/pro-test-results.xml'
+        condition: succeededOrFailed()
+        

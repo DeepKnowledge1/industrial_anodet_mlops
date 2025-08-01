@@ -1,0 +1,71 @@
+$schema: https://azuremlschemas.azureedge.net/latest/kubernetesOnlineDeployment.schema.json
+
+name: blue
+
+
+endpoint_name: anomavision-endpoint
+
+model: azureml:anomavision_model:1
+
+environment: azureml:anomavision_env:1
+compute: ws-anom-aks  # Must be attached to the workspace
+
+# Autoscaling configuration based on CPU utilization
+scale_settings:
+  type: target_utilization                # Autoscale based on CPU utilization
+  min_instances: 1                        # Minimum number of instances (pods)
+  max_instances: 2                       # Maximum number of instances (pods)
+  target_utilization_percentage: 70      # Target CPU utilization per instance before scaling
+  polling_interval: 10                   # Frequency (in seconds) to check for scaling conditions
+
+# Inference request handling configuration
+request_settings:
+  request_timeout_ms: 90000               # Max time (in ms) to wait for a request before timeout
+  max_concurrent_requests_per_instance: 1 # Limit of simultaneous requests each pod can handle
+  max_queue_wait_ms: 500                  # Max time a request can wait in queue before rejection
+
+
+# Kubernetes container-level resource configuration
+resources:
+  requests:
+    cpu: "1"                              # Minimum CPU requested per instance
+    memory: "2Gi"                         # Minimum memory requested per instance
+  limits:
+    cpu: "2"                              # Maximum CPU allowed per instance
+    memory: "4Gi"                         # Maximum memory allowed per instance
+
+
+code_configuration:
+  code: ../src                            # Relative path to the code directory
+  scoring_script: score.py                # Entry point for your scoring logic
+
+
+environment_variables:
+  # MODEL_PATH: /var/azureml-app/azureml-models/anomavision_model/1/model_output  # Path to the model inside container
+  LOG_LEVEL: "INFO"
+
+# Liveness probe to monitor whether the container is running correctly
+liveness_probe:
+  initial_delay: 30                      # Seconds to wait before checking container liveness
+  period: 30                             # Time between liveness checks (seconds)
+  timeout: 10                            # Max time to wait for a response (seconds)
+  success_threshold: 1                  # Number of successful checks before considering container live
+  failure_threshold: 3                  # Number of failed checks before restarting the container
+
+# Readiness probe to monitor whether the container is ready to accept traffic
+readiness_probe:
+  initial_delay: 30                     # Seconds to wait before checking readiness
+  period: 30                            # Time between readiness checks (seconds)
+  timeout: 10                           # Max time to wait for a response (seconds)
+  success_threshold: 1                 # Number of successful checks before marking container ready
+  failure_threshold: 3                 # Number of failed checks before marking container unready
+
+
+# Optional human-readable description of the deployment
+description: "Anomaly detection deployment with AnomaVision model on AKS with autoscaling"
+
+# Tags for metadata, useful for search, cost tracking, or filtering in Azure portal
+tags:
+  model: "anomavision"
+  version: "1.0"
+  environment: "production"

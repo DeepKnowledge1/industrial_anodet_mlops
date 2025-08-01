@@ -1,0 +1,22 @@
+parameters: {}
+jobs:
+  - job: CreateKeyVault
+    displayName: "Create & Upload SSL Certs to Key Vault"
+    steps:
+      - task: AzureCLI@2
+        inputs:
+          azureSubscription: mlops_anomaly_detection
+          scriptType: ps
+          scriptLocation: inlineScript
+          inlineScript: |
+            az keyvault create --name $(KEY_VAULT_NAME) --resource-group $(RESOURCE_GROUP)
+
+            az keyvault secret set `
+              --vault-name $(KEY_VAULT_NAME) `
+              --name "ssl-cert-pem" `
+              --file $(SSL_CERT_PATH)
+
+            az keyvault secret set `
+              --vault-name $(KEY_VAULT_NAME) `
+              --name "ssl-key-pem" `
+              --file $(SSL_KEY_PATH)

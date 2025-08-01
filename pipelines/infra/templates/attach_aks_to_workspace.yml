@@ -1,0 +1,19 @@
+parameters: {}
+jobs:
+  - job: AttachAKS
+    displayName: "Attach AKS to Azure ML Workspace"
+    steps:
+      - task: AzureCLI@2
+        inputs:
+          azureSubscription: mlops_anomaly_detection
+          scriptType: ps
+          scriptLocation: inlineScript
+          inlineScript: |
+            az ml compute attach `
+              --resource-group $(RESOURCE_GROUP) `
+              --workspace-name $(WORKSPACE) `
+              --type Kubernetes `
+              --name $(ML_AKS_NAME) `
+              --resource-id $(az aks show --name $(AKS_NAME) --resource-group $(RESOURCE_GROUP) --query id -o tsv) `
+              --identity-type SystemAssigned `
+              --namespace azureml

@@ -52,5 +52,15 @@ model_weights/*.h5
 .Trashes
 ehthumbs.db
 Thumbs.db
-src/model/anodet/
-padim_model.onnx
+*.onnx
+mlruns/
+distributions/
+outputs/
+*.pt
+pipelines/azure-mlops-pipeline - Copy.yml
+junit/
+
+monitoring/prometheus.yml
+docker-compose.yml
+logs/
+doc/banner2.png

@@ -1,1 +1,235 @@
 
+trigger:
+  paths:
+    include:
+      - infra/
+
+pool:
+  name: Default
+
+variables:
+  - group: mlops-azure-components
+
+stages:
+- stage: BootstrapAzureMLInfra
+  displayName: 'Provision Azure ML Infrastructure'
+  jobs:
+  - job: Setup
+    displayName: 'Create ACR, AKS, Workspace, Compute, Dataset'
+    steps:
+    - checkout: self
+      submodules: true
+      persistCredentials: true
+      fetchDepth: 0  # Ensures full history, which submodules sometimes need
+
+    - script: |
+        git submodule update --init --recursive
+      displayName: 'Manually update submodules'
+
+
+    - task: AzureCLI@2
+      displayName: 'Step 0 - Install Azure ML extension'
+      inputs:
+        azureSubscription: mlops_anomaly_detection
+        scriptType: ps
+        scriptLocation: inlineScript
+        inlineScript: |
+          az extension add --name ml
+
+    - task: AzureCLI@2
+      displayName: 'Step 1 - Create Resource Group'
+      inputs:
+        azureSubscription: mlops_anomaly_detection
+        scriptType: ps
+        scriptLocation: inlineScript
+        inlineScript: |
+          az group create `
+            --name $(RESOURCE_GROUP) `
+            --location $(LOCATION)
+
+    - task: AzureCLI@2
+      displayName: 'Step 2 - Create Azure ML Workspace'
+      inputs:
+        azureSubscription: mlops_anomaly_detection
+        scriptType: ps
+        scriptLocation: inlineScript
+        inlineScript: |
+          az ml workspace create `
+            --name $(WORKSPACE) `
+            --resource-group $(RESOURCE_GROUP) `
+            --location $(LOCATION)
+
+    # - task: AzureCLI@2
+    #   displayName: 'Step 2 - Create & Uplaod ssl_cert and ssl_key'
+    #   inputs:
+    #     azureSubscription: mlops_anomaly_detection
+    #     scriptType: ps
+    #     scriptLocation: inlineScript
+    #     inlineScript: |
+      
+    #       az keyvault create --name $(KEY_VAULT_NAME) --resource-group $(RESOURCE_GROUP)
+          
+    #       az keyvault secret set `
+    #         --vault-name $(KEY_VAULT_NAME) `
+    #         --name "ssl-cert-pem" `
+    #         --file $(SSL_CERT_PATH)
+          
+    #       az keyvault secret set `
+    #         --vault-name $(KEY_VAULT_NAME) `
+    #         --name "ssl-key-pem" `
+    #         --file $(SSL_KEY_PATH)          
+
+    # - task: AzureCLI@2
+    #   displayName: 'Step 3 - Create Azure Container Registry (ACR)'
+    #   inputs:
+    #     azureSubscription: mlops_anomaly_detection
+    #     scriptType: ps
+    #     scriptLocation: inlineScript
+    #     inlineScript: |
+
+    #       az acr create `
+    #           --resource-group $(RESOURCE_GROUP) `
+    #           --name $(ACR_NAME) `
+    #           --sku Basic `
+    #           --location $(LOCATION) `
+    #           --admin-enabled true
+
+
+    - task: AzureCLI@2
+      displayName: 'Step 4 - Create AKS Cluster'
+      inputs:
+        azureSubscription: mlops_anomaly_detection
+        scriptType: ps
+        scriptLocation: inlineScript
+        inlineScript: |
+
+          az aks create `
+            --resource-group $(RESOURCE_GROUP) `
+            --name $(AKS_NAME) `
+            --enable-cluster-autoscaler `
+            --min-count 1 `
+            --max-count 2 `
+            --node-count 2 `
+            --node-vm-size Standard_DS3_v2 `
+            --enable-managed-identity `
+            --generate-ssh-keys `
+            --enable-addons monitoring `
+            --load-balancer-idle-timeout 4
+
+      # ####   If you want to use GPU
+      #     az aks create `
+      #       --resource-group $(RESOURCE_GROUP) `
+      #       --name $(AKS_NAME) `
+      #       --enable-cluster-autoscaler `
+      #       --min-count 1 `
+      #       --max-count 3 `
+      #       --node-count 1 `
+      #       --node-vm-size Standard_NC6s `
+      #       --node-osdisk-size 128 `
+      #       --enable-managed-identity `
+      #       --generate-ssh-keys `
+      #       --enable-addons monitoring `
+      #       --kubernetes-version $(AKS_VERSION) `
+      #       --zones 1 2 3
+      # #Install NVIDIA device plugin:
+      # kubectl apply -f https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/v0.14.1/nvidia-device-plugin.yml
+
+
+
+
+    - task: AzureCLI@2
+      displayName: 'Step 5 - Create k8s-extension'
+      inputs:
+        azureSubscription: mlops_anomaly_detection
+        scriptType: ps
+        scriptLocation: inlineScript
+        inlineScript: |
+
+          az k8s-extension create `
+              --name azureml `
+              --extension-type Microsoft.AzureML.Kubernetes `
+              --cluster-type managedClusters `
+              --cluster-name $(AKS_NAME) `
+              --resource-group $(RESOURCE_GROUP) `
+              --configuration-settings enableInference=True inferenceRouterServiceType=loadBalancer sslCname=your.domain.com `
+              --config-protected-settings sslCertPemFile=$(SSL_CERT_PATH) sslKeyPemFile=$(SSL_KEY_PATH)
+
+    - task: AzureCLI@2
+      displayName: 'Step 6 - Attach AKS to Azure ML Workspace'
+      inputs:
+        azureSubscription: mlops_anomaly_detection
+        scriptType: ps
+        scriptLocation: inlineScript
+        inlineScript: |
+
+          az ml compute attach `
+            --resource-group $(RESOURCE_GROUP) `
+            --workspace-name $(WORKSPACE) `
+            --type Kubernetes `
+            --name $(ML_AKS_NAME) `
+            --resource-id $(az aks show --name $(AKS_NAME) --resource-group $(RESOURCE_GROUP) --query id -o tsv) `
+            --identity-type SystemAssigned `
+            --namespace azureml
+
+
+    - task: AzureCLI@2
+      displayName: 'Step 7 - Create Azure ML Compute Cluster'
+      inputs:
+        azureSubscription: mlops_anomaly_detection
+        scriptType: ps
+        scriptLocation: inlineScript
+        inlineScript: |
+          az ml compute create `
+            --name $(COMPUTE_NAME) `
+            --type AmlCompute `
+            --size Standard_DS2_v2 `
+            --min-instances 0 `
+            --max-instances 1 `
+            --idle-time-before-scale-down 120 `
+            --resource-group $(RESOURCE_GROUP) `
+            --workspace-name $(WORKSPACE)
+
+          ## in case you want to use GPU
+
+          # az ml compute create `
+          #     --name $(COMPUTE_NAME) `
+          #     --type AmlCompute `
+          #     --size Standard_NV6 `
+          #     --min-instances 0 `
+          #     --max-instances 1 `
+          #     --idle-time-before-scale-down 120 `
+          #     --resource-group $(RESOURCE_GROUP) `
+          #     --workspace-name $(WORKSPACE)
+
+    - task: AzureCLI@2
+      displayName: 'Step 8 - Upload Training Images to ML Dataset'
+      inputs:
+        azureSubscription: mlops_anomaly_detection
+        scriptType: ps
+        scriptLocation: inlineScript
+        inlineScript: |
+          $path = "$(DATA_ANO_DIR)"
+          Write-Host "Uploading from: $path"
+          az ml data create `
+            --name anomaly-images `
+            --type uri_folder `
+            --path $path `
+            --description "Training + test + ground truth images for anomaly detection" `
+            --workspace-name "$(WORKSPACE)" `
+            --resource-group "$(RESOURCE_GROUP)"
+
+
+    - task: AzureCLI@2
+      displayName: 'Step 9 - Register Training Environment'
+      inputs:
+        azureSubscription: mlops_anomaly_detection
+        scriptType: ps
+        scriptLocation: inlineScript
+        inlineScript: |
+          az ml environment create  `
+            --name anomavision_env  `
+            --version 1  `
+            --build-context "$(Build.SourcesDirectory)/environment"  `
+            --dockerfile-path Dockerfile  `
+            --workspace-name $(WORKSPACE) `
+            --resource-group $(RESOURCE_GROUP)

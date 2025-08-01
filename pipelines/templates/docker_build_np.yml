@@ -1,0 +1,12 @@
+parameters: {}
+jobs:
+- job: BuildDockerImage
+  displayName: "Build Docker Image (FastAPI + NumPy)"
+  steps:
+    - task: DownloadBuildArtifacts@0
+      inputs:
+        artifactName: 'models'
+        downloadPath: './'  
+    - script: |
+        docker build --no-cache -t fastapi-anomavision:np -f docker/Dockerfile.np .
+      displayName: "Build FastAPI Docker Image with NumPy"        

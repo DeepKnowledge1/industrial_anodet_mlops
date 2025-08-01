@@ -1,0 +1,14 @@
+parameters: {}
+jobs:
+  - job: CreateResourceGroup
+    displayName: "Create Resource Group"
+    steps:
+      - task: AzureCLI@2
+        inputs:
+          azureSubscription: mlops_anomaly_detection
+          scriptType: ps
+          scriptLocation: inlineScript
+          inlineScript: |
+            az group create `
+              --name $(RESOURCE_GROUP) `
+              --location $(LOCATION)

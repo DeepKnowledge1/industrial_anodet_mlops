@@ -1,0 +1,3 @@
+[submodule "src/AnomaVision"]
+	path = src/AnomaVision
+	url = https://dev.azure.com/deepknowledge/mlops-AnomaVision/_git/AnomaVision

@@ -1,0 +1,85 @@
+
+trigger:
+  paths:
+    include:
+      - infra/
+
+pool:
+  name: Default
+
+variables:
+  - group: mlops-azure-components
+
+stages:
+- stage: BootstrapAzureMLInfra
+  displayName: 'Provision Azure ML Infrastructure'
+  jobs:
+  - job: Setup
+    displayName: 'Create ACR, AKS, Workspace, Compute, Dataset'
+    steps:
+
+    - task: AzureCLI@2
+      displayName: 'Step 0 - Install Azure ML extension'
+      inputs:
+        azureSubscription: mlops_anomaly_detection
+        scriptType: ps
+        scriptLocation: inlineScript
+        inlineScript: |
+          az extension add --name ml
+
+    - task: AzureCLI@2
+      displayName: 'Step 1 - Create Resource Group'
+      inputs:
+        azureSubscription: mlops_anomaly_detection
+        scriptType: ps
+        scriptLocation: inlineScript
+        inlineScript: |
+          az group create `
+            --name $(RESOURCE_GROUP) `
+            --location $(LOCATION)
+
+    - task: AzureCLI@2
+      displayName: 'Step 2 - Create Azure ML Workspace'
+      inputs:
+        azureSubscription: mlops_anomaly_detection
+        scriptType: ps
+        scriptLocation: inlineScript
+        inlineScript: |
+          az ml workspace create `
+            --name $(WORKSPACE) `
+            --resource-group $(RESOURCE_GROUP) `
+            --location $(LOCATION)
+
+    - task: AzureCLI@2
+      displayName: 'Step 7 - Create Azure ML Compute Cluster'
+      inputs:
+        azureSubscription: mlops_anomaly_detection
+        scriptType: ps
+        scriptLocation: inlineScript
+        inlineScript: |
+          az ml compute create `
+            --name $(COMPUTE_NAME) `
+            --type AmlCompute `
+            --size Standard_DS2_v2 `
+            --min-instances 0 `
+            --max-instances 1 `
+            --idle-time-before-scale-down 120 `
+            --resource-group $(RESOURCE_GROUP) `
+            --workspace-name $(WORKSPACE)
+
+
+    - task: AzureCLI@2
+      displayName: 'Step 9 - Register Training Environment'
+      inputs:
+        azureSubscription: mlops_anomaly_detection
+        scriptType: ps
+        scriptLocation: inlineScript
+        inlineScript: |
+
+          az ml environment create `
+            --name mlops_anomavision `
+            --image mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:latest `
+            --conda-file "$(Build.SourcesDirectory)/deployment/environment.yml" `
+            --workspace-name $(WORKSPACE) `
+            --resource-group $(RESOURCE_GROUP)
+          

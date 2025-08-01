@@ -1,0 +1,9 @@
+parameters: {}
+jobs:
+  - job: DockerTagAndPush
+    displayName: "Tag and Push Docker Image to ACR"
+    steps:
+      - script: |
+          docker tag fastapi-anomavision:np $(ACR_NAME).azurecr.io/fastapi-anomavision:latest
+          docker push $(ACR_NAME).azurecr.io/fastapi-anomavision:latest
+        displayName: "Tag and Push Docker Image"
