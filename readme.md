@@ -15,6 +15,8 @@ Whether you're a data scientist, ML engineer, or DevOps enthusiast, this reposit
 
 This repository serves as the foundational codebase for many of our popular YouTube videos, covering a wide range of topics in **MLOps, Azure ML, FastAPI, Docker, Kubernetes (AKS), ONNX, and more**. Each component within this project is meticulously crafted to demonstrate best practices and real-world applications.
 
+[![Build Real Industrial MLOps with Azure ML & AKS](https://img.youtube.com/vi/k_4GLPGVVBw/hqdefault.jpg)](https://www.youtube.com/playlist?list=PL-kVqysGX5170z9hCqpCtQbhwiq3hnn55)
+
 ### 📺 Featured Videos
 
 | Title                                                                                                                                 | Description                                                                                                                                                                                               |
