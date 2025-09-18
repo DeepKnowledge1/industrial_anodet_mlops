@@ -27,7 +27,7 @@ async def load_model():
         available_providers = ort.get_available_providers()
         # Check if CUDA (GPU) is available by looking for the CUDAExecutionProvider
         use_gpu = "CUDAExecutionProvider" in available_providers
-        
+
         # Create session options for ONNX Runtime
         sess_options = SessionOptions()
 
@@ -46,11 +46,11 @@ async def load_model():
             sess_options.intra_op_num_threads = multiprocessing.cpu_count()
 
         # Set the preferred execution provider based on hardware availability
-        providers = ["CUDAExecutionProvider"] if use_gpu else ["CPUExecutionProvider"]        
-        
+        providers = ["CUDAExecutionProvider"] if use_gpu else ["CPUExecutionProvider"]
+
         # Try to load ONNX model first
         if os.path.exists("padim_model.onnx"):
-            sess = ort.InferenceSession("padim_model.onnx", providers=providers, sess_options=sess_options)                                
+            sess = ort.InferenceSession("padim_model.onnx", providers=providers, sess_options=sess_options)
             print("ONNX model loaded successfully.")
         else:
             raise FileNotFoundError("No model found. Please ensure 'padim_model.onnx' ")
@@ -103,7 +103,7 @@ async def root():
 
 @app.get("/health")
 async def health_check():
-    model_loaded = sess is not None 
+    model_loaded = sess is not None
     return {
         "status": "healthy" if model_loaded else "unhealthy",
         "model_type": "onnx" if sess else "pytorch" if padim_model else "none",
@@ -124,10 +124,10 @@ def preprocess_image_from_upload(file_contents: bytes) -> np.ndarray:
     """Convert uploaded file to numpy array matching detect.py preprocessing"""
     # Read image using PIL and convert to RGB
     image_pil = Image.open(io.BytesIO(file_contents)).convert("RGB")
-    
+
     # Convert PIL to numpy array (this matches how detect.py reads with cv2 then converts to RGB)
     image_np = np.array(image_pil)
-    
+
     return image_np
 
 def create_visualizations(image_np: np.ndarray, score_maps: np.ndarray, image_scores: np.ndarray) -> tuple:
@@ -176,7 +176,7 @@ def numpy_to_base64(image_array: np.ndarray, resize_to: tuple[int, int] = None) 
     """Convert numpy array to base64-encoded PNG, optionally resized"""
     if image_array is None:
         return ""
-    
+
     try:
         # Ensure the array is in the right format (0-255 uint8)
         if image_array.dtype != np.uint8:
@@ -185,7 +185,7 @@ def numpy_to_base64(image_array: np.ndarray, resize_to: tuple[int, int] = None) 
                 image_array = (image_array * 255).astype(np.uint8)
             else:
                 image_array = np.clip(image_array, 0, 255).astype(np.uint8)
-        
+
         # Convert to PIL Image
         image = Image.fromarray(image_array)
         if resize_to is not None:
@@ -213,38 +213,38 @@ async def predict_anomaly(
         # Read and preprocess image exactly like detect.py
         contents = await file.read()
         image_np = preprocess_image_from_upload(contents)
-        
+
         print(f"Image shape: {image_np.shape}")
         print(f"Image dtype: {image_np.dtype}")
-        
+
         if sess is not None:
             # ONNX inference - convert single image to batch
             batch = anodet.to_batch([image_np])
             input_numpy = batch
-            
+
             input_name = sess.get_inputs()[0].name
             output_names = [output.name for output in sess.get_outputs()]
-            
+
             if len(output_names) < 2:
                 raise HTTPException(status_code=500, detail="Model must have at least 2 outputs")
-            
-            outputs = sess.run(output_names, {input_name: input_numpy})            
-            
+
+            outputs = sess.run(output_names, {input_name: input_numpy})
+
             image_scores = np.array([outputs[0]])
             score_maps = np.array(outputs[1])
-            
+
 
         print(f"Image scores: {image_scores}")
         print(f"Score maps shape: {score_maps.shape}")
-        
+
         # Get single values
         anomaly_score = float(image_scores[0])
         is_anomaly = anomaly_score >= ANOMALY_THRESHOLD
-        
+
         # Create anomaly map (normalized score map)
         # score_map_np = score_maps[0]
         # score_map_normalized = score_map_np.copy()
-        
+
         # if score_map_np.max() - score_map_np.min() > 0:
         #     score_map_normalized = (score_map_np - score_map_np.min()) / (score_map_np.max() - score_map_np.min())
         # else:
@@ -274,7 +274,7 @@ async def predict_anomaly(
                 print("✓ Heatmap image created")
             else:
                 print("❗ Heatmap image is None")
-                
+
             # if highlighted_image is not None:
             #     highlighted_image_base64 = numpy_to_base64(highlighted_image,RESIZE_SIZE)
             #     print("✓ Highlighted image created")
@@ -300,7 +300,7 @@ async def predict_anomaly(
 async def predict_batch(files: list[UploadFile] = File(...)):
     if len(files) > 10:
         raise HTTPException(status_code=400, detail="Maximum 10 files per batch")
-    
+
     results = []
     for i, file in enumerate(files):
         try:
@@ -316,7 +316,7 @@ async def predict_batch(files: list[UploadFile] = File(...)):
                 "filename": file.filename,
                 "error": str(e)
             })
-    
+
     return {"batch_results": results}
 
 @app.get("/model-info")
@@ -331,13 +331,14 @@ async def get_model_info():
             "outputs": outputs,
             "threshold": ANOMALY_THRESHOLD
         }
-        
+
     else:
         raise HTTPException(status_code=500, detail="No model loaded")
 
 if __name__ == "__main__":
     # Use string import for proper reload functionality
     uvicorn.run("fastapi_app_np:app", host="0.0.0.0", port=8080, reload=False)
-# run that from the Docker image,  see docker\Dockerfile.np   
+# run that from the Docker image,  see docker\Dockerfile.np
+
 
 
