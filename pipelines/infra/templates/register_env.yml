@@ -1,18 +1,35 @@
+# parameters: {}
+# jobs:
+#   - job: RegisterEnvironment
+#     displayName: "Register Training Environment"
+#     steps:
+#       - task: AzureCLI@2
+#         inputs:
+#           azureSubscription: mlops_anomaly_detection
+#           scriptType: ps
+#           scriptLocation: inlineScript
+#           inlineScript: |
+#             az ml environment create  `
+#               --name anomavision_env  `
+#               --version 1  `
+#               --build-context "$(Build.SourcesDirectory)/environment"  `
+#               --dockerfile-path Dockerfile  `
+#               --workspace-name $(WORKSPACE) `
+#               --resource-group $(RESOURCE_GROUP)
+
+
 parameters: {}
-jobs:
-  - job: RegisterEnvironment
-    displayName: "Register Training Environment"
-    steps:
-      - task: AzureCLI@2
-        inputs:
-          azureSubscription: mlops_anomaly_detection
-          scriptType: ps
-          scriptLocation: inlineScript
-          inlineScript: |
-            az ml environment create  `
-              --name anomavision_env  `
-              --version 1  `
-              --build-context "$(Build.SourcesDirectory)/environment"  `
-              --dockerfile-path Dockerfile  `
-              --workspace-name $(WORKSPACE) `
-              --resource-group $(RESOURCE_GROUP)
+steps: # Changed from 'jobs' to 'steps'
+  - task: AzureCLI@2
+    inputs:
+      azureSubscription: mlops_anomaly_detection
+      scriptType: ps
+      scriptLocation: inlineScript
+      inlineScript: |
+        az ml environment create  `
+          --name anomavision_env  `
+          --version 1  `
+          --build-context "$(Build.SourcesDirectory)/environment"  `
+          --dockerfile-path Dockerfile  `
+          --workspace-name $(WORKSPACE) `
+          --resource-group $(RESOURCE_GROUP)

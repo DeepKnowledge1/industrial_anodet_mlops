@@ -1,0 +1,129 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pool:
+  name: Default
+
+variables:
+  - group: mlops-azure-components
+
+stages:
+
+- stage: UnitTests
+  displayName: Run Unit Tests using pytest
+  jobs:
+  - job: RunPytest
+    steps:
+    - checkout: self
+      submodules: true
+      persistCredentials: true
+      fetchDepth: 0  
+
+    - script: |
+        git submodule update --init --recursive
+      displayName: 'Manually update submodules'
+
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '3.11.0'
+
+    - script: |
+        poetry lock
+        poetry install --only main
+      displayName: 'Install Poetry dependencies'
+
+    - script: |
+        poetry run pytest tests --doctest-modules --junitxml=junit/test-results.xml
+      displayName: 'Run pytest'
+
+    - task: PublishTestResults@2
+      displayName: 'Publish Test Results'
+      inputs:
+        testResultsFiles: '**/test-results.xml'
+
+# - stage: RunDataValidation
+#   jobs:
+#   - job: ValidateData
+#     steps:
+#     - checkout: self
+#     - task: AzureCLI@2
+#       inputs:
+#         azureSubscription: $(azureSubscription)
+#         scriptType: bash
+#         scriptLocation: inlineScript
+#         inlineScript: |
+#           az ml job create --file jobs/data-validation-job.yml \
+#             --workspace-name $(amlWorkspace) \
+#             --resource-group $(amlResourceGroup)
+
+# - stage: TrainModel
+#   dependsOn: RunDataValidation
+#   jobs:
+#   - job: Train
+#     steps:
+#     - checkout: self
+#     - task: AzureCLI@2
+#       inputs:
+#         azureSubscription: $(azureSubscription)
+#         scriptType: bash
+#         scriptLocation: inlineScript
+#         inlineScript: |
+#           az ml job create --file jobs/training-job.yml \
+#             --workspace-name $(amlWorkspace) \
+#             --resource-group $(amlResourceGroup)
+
+# - stage: ValidateModel
+#   dependsOn: TrainModel
+#   jobs:
+#   - job: Validate
+#     steps:
+#     - checkout: self
+#     - task: AzureCLI@2
+#       inputs:
+#         azureSubscription: $(azureSubscription)
+#         scriptType: bash
+#         scriptLocation: inlineScript
+#         inlineScript: |
+#           az ml job create --file jobs/validation-job.yml \
+#             --workspace-name $(amlWorkspace) \
+#             --resource-group $(amlResourceGroup)
+
+# - stage: TestModel
+#   dependsOn: ValidateModel
+#   jobs:
+#   - job: Test
+#     steps:
+#     - checkout: self
+#     - task: AzureCLI@2
+#       inputs:
+#         azureSubscription: $(azureSubscription)
+#         scriptType: bash
+#         scriptLocation: inlineScript
+#         inlineScript: |
+#           az ml job create --file jobs/test-job.yml \
+#             --workspace-name $(amlWorkspace) \
+#             --resource-group $(amlResourceGroup)
+
+# - stage: DeployModel
+#   dependsOn: TestModel
+#   condition: succeeded()
+#   jobs:
+#   - job: DeployToAKS
+#     steps:
+#     - checkout: self
+#     - task: AzureCLI@2
+#       inputs:
+#         azureSubscription: $(azureSubscription)
+#         scriptType: bash
+#         scriptLocation: inlineScript
+#         inlineScript: |
+#           az ml online-endpoint create --file aml-config/deployment-endpoint.yml \
+#             --workspace-name $(amlWorkspace) \
+#             --resource-group $(amlResourceGroup)
+
+#           az ml online-deployment create --file aml-config/deployment-deploy.yml \
+#             --workspace-name $(amlWorkspace) \
+#             --resource-group $(amlResourceGroup) \
+#             --all-traffic
