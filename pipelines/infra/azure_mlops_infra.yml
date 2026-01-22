@@ -9,52 +9,45 @@ pool:
 variables:
   - group: mlops-azure-components
 
+
 stages:
-  # Main stage for setting up the core Azure Machine Learning backbone
   - stage: BootstrapAzureMLInfra
     displayName: Provision Azure ML Infrastructure
     jobs:
-      # Initial job to ensure the Azure CLI has the necessary ML capabilities
       - job: InstallAzureMLExtension
         displayName: "Install ML Extension"
         steps:
           - template: templates/install_azureml_extension.yml
 
-      # Resource Group must exist before any resources can be deployed inside it
       - job: CreateResourceGroup
         displayName: "Create RG"
         dependsOn: InstallAzureMLExtension
         steps:
           - template: templates/create_resource_group.yml
 
-      # The Workspace is the central hub and depends on the Resource Group existing
       - job: CreateWorkspace
         displayName: "Create AML Workspace"
         dependsOn: CreateResourceGroup
         steps:
           - template: templates/create_workspace.yml
 
-      # Provisioning the compute cluster; requires the Workspace as a parent container
       - job: CreateComputeCluster
         displayName: "Setup Compute"
         dependsOn: CreateWorkspace
         steps:
           - template: templates/create_compute_cluster.yml
 
-      # Uploading data assets; requires compute/storage availability within the workspace
       - job: UploadDataset
         displayName: "Data Ingestion"
         dependsOn: CreateComputeCluster
         steps:
           - template: templates/upload_dataset.yml
 
-      # Registering the Python/Conda environment for model training consistency
       - job: RegisterEnvironment
         displayName: "Register ML Environment"
         dependsOn: UploadDataset
         steps:
           - template: templates/register_env.yml
-
 
   # Optional stage for ACR & Key Vault
   # - stage: SetupKeyVaultACR
