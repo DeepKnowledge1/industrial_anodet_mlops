@@ -56,6 +56,8 @@ pyyaml = "^6.0.1"                      # Read/write YAML config files
 # Load Testing
 locust = "^2.24.0"                     # Simulate traffic to test FastAPI server
 streamlit = "^1.46.0"
+easydict = "^1.13"
+azureml-ai-monitoring = "^1.0.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.2.0"                      # Testing framework
