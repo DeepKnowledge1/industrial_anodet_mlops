@@ -1,7 +1,7 @@
 
 import sys, os
 sys.path.append(os.path.join(os.path.dirname(__file__), "AnomaVision"))
-import AnomaVision
+import AnomaVision.anomavision as AnomaVision
 
 
 
@@ -18,10 +18,12 @@ from datetime import datetime
 import json
 from sklearn.metrics import roc_auc_score, precision_recall_curve, auc
 
-from AnomaVision.utils import (
+from AnomaVision.anomavision.utils import (
     get_logger,
     setup_logging,
 )
+
+
 setup_logging(enabled=True, log_level="INFO", log_to_file=False)
 logger = get_logger("AnomaVision.train")  # Force it into AnomaVision hierarchy
 
@@ -38,7 +40,7 @@ def parse_args():
 
     parser.add_argument('--model_data_path', type=str, default='./distributions/',
                         help='Directory to save model distributions and ONNX file.')
-    parser.add_argument('--output_model', type=str, default='model_output', help='Output folder for model export')
+    parser.add_argument('--output_model', type=str, default='model_padim.pt', help='Output folder for model export')
     parser.add_argument('--backbone', type=str, choices=['resnet18', 'wide_resnet50'], default='resnet18',
                         help='Backbone network to use for feature extraction.')
 
@@ -51,7 +53,7 @@ def parse_args():
     parser.add_argument('--layer_indices', nargs='+', type=int, default=[0],
                         help='List of layer indices to extract features from. Default: [0].')
 
-    parser.add_argument('--feat_dim', type=int, default=50,
+    parser.add_argument('--feat_dim', type=int, default=10,
                         help='Number of random feature dimensions to keep.')
 
     # MLflow specific arguments
@@ -277,8 +279,8 @@ def main(args):
             logger.info("Exporting model to ONNX...")
             onnx_model_path = os.path.join(MODEL_DATA_PATH, "padim_model.onnx")
 
-            exporter = ModelExporter(pytorch_model_path, MODEL_DATA_PATH, logger)
 
+            exporter = ModelExporter(str(pytorch_model_path), str(MODEL_DATA_PATH), logger, device="cpu")
             print("Starting export...")
             from easydict import EasyDict as edict
 
@@ -317,9 +319,6 @@ def main(args):
                 logger.warning(f"Could not copy model to AzureML output: {e}")
 
             # Load ONNX model for MLflow logging
-
-
-
 
 
 
