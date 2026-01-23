@@ -1,7 +1,7 @@
 
 import sys, os
 sys.path.append(os.path.join(os.path.dirname(__file__), "AnomaVision"))
-import anomavision
+import AnomaVision
 
 
 
@@ -18,12 +18,12 @@ from datetime import datetime
 import json
 from sklearn.metrics import roc_auc_score, precision_recall_curve, auc
 
-from anomavision.utils import (
+from AnomaVision.utils import (
     get_logger,
     setup_logging,
 )
 setup_logging(enabled=True, log_level="INFO", log_to_file=False)
-logger = get_logger("anomavision.train")  # Force it into anomavision hierarchy
+logger = get_logger("AnomaVision.train")  # Force it into AnomaVision hierarchy
 
 
 os.environ.pop("MLFLOW_RUN_ID", None)  # Remove Azure-injected env var
@@ -204,7 +204,7 @@ def main(args):
         args.run_name = f"padim_{args.backbone}_{timestamp}"
 
     # Load training dataset
-    train_dataset = anomavision.AnodetDataset(os.path.join(DATASET_PATH, "train/good"))
+    train_dataset = AnomaVision.AnodetDataset(os.path.join(DATASET_PATH, "train/good"))
     train_dataloader = DataLoader(train_dataset, batch_size=args.batch_size)
     logger.info(f"Number of training images: {len(train_dataset)}")
 
@@ -218,7 +218,7 @@ def main(args):
         # test_path = args.test_dataset_path or DATASET_PATH
         try:
             # Try to load as MVTec dataset for evaluation
-            test_dataset = anomavision.MVTecDataset(test_path, class_name=class_name, is_train=False)
+            test_dataset = AnomaVision.MVTecDataset(test_path, class_name=class_name, is_train=False)
             test_dataloader = DataLoader(test_dataset, batch_size=args.batch_size)
             logger.info(f"Number of test images: {len(test_dataset)}")
         except Exception as e:
@@ -250,7 +250,7 @@ def main(args):
 
             # Initialize model
             logger.info("Initializing PaDiM model...")
-            padim = anomavision.Padim(
+            padim = AnomaVision.Padim(
                 backbone=args.backbone,
                 device=device,
                 layer_indices=args.layer_indices,
@@ -392,4 +392,3 @@ def main(args):
 if __name__ == "__main__":
     args = parse_args()
     main(args)
-
