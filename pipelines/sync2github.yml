@@ -1,4 +1,3 @@
-
 trigger:
   branches:
     include:
@@ -17,22 +16,24 @@ stages:
       name: Default
     steps:
     - checkout: self
-    - script: |        
-        git remote add github https://$(GITHUB_PAT)@github.com/DeepKnowledge1/$(Build.Repository.Name).git
+      clean: true
+      fetchDepth: 0   # IMPORTANT: full history
 
+    - script: |
+        echo "== Git diagnostics =="
+        git --version
+        git rev-parse --is-shallow-repository
+        git log -1 --oneline
+
+        echo "== Configure/repair remote =="
+        git remote remove github 2>nul || echo "remote github did not exist"
+        git remote add github https://$(GITHUB_PAT)@github.com/DeepKnowledge1/$(Build.Repository.Name).git
+        git remote -v
+
+        echo "== Optional: reduce push pain on big repos =="
+        git config http.postBuffer 524288000
+        git config core.compression 0
+
+        echo "== Push =="
         git push github HEAD:main --force
       displayName: 'Push to GitHub'
-
-
-
-
-# git remote add devops https://deepknowledge@dev.azure.com/deepknowledge/mlops-AnomaVision/_git/AnomaVision
-# git branch -vv                                                                                                                         
-#  git push --set-upstream devops main  
-
-
-
-
-# git remote add devops https://deepknowledge@dev.azure.com/deepknowledge/mlops-AnomaVision/_git/industrial_anodet_mlops
-# git branch -vv                                                                                                                         
-# git push --set-upstream devops main  
