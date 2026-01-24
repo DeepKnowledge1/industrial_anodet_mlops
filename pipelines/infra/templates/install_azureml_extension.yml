@@ -23,4 +23,5 @@ steps:  # Changed from 'jobs' to 'steps'
       scriptType: ps
       scriptLocation: inlineScript
       inlineScript: |
-        az extension add --name ml
+        az extension add --name ml --yes --upgrade --debug
+
