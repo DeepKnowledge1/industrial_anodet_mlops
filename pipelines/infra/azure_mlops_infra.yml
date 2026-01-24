@@ -14,14 +14,14 @@ stages:
   - stage: BootstrapAzureMLInfra
     displayName: Provision Azure ML Infrastructure
     jobs:
-      # - job: InstallAzureMLExtension
-      #   displayName: "Install ML Extension"
-      #   steps:
-      #     - template: templates/install_azureml_extension.yml
+      - job: InstallAzureMLExtension
+        displayName: "Install ML Extension"
+        steps:
+          - template: templates/install_azureml_extension.yml
 
       - job: CreateResourceGroup
         displayName: "Create RG"
-        # dependsOn: InstallAzureMLExtension
+        dependsOn: InstallAzureMLExtension
         steps:
           - template: templates/create_resource_group.yml
 
