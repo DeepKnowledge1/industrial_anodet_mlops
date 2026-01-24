@@ -21,7 +21,7 @@ stages:
 
       - job: CreateResourceGroup
         displayName: "Create RG"
-        dependsOn: InstallAzureMLExtension
+        # dependsOn: InstallAzureMLExtension
         steps:
           - template: templates/create_resource_group.yml
 
