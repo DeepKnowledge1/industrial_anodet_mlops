@@ -7,7 +7,7 @@ parameters:
 
 
 trigger:
-  - main
+  - mainsss
 
 pool:
   name: Default
