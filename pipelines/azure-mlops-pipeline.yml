@@ -6,19 +6,41 @@ parameters:
     default: false
 
 
-trigger:
-  - mainsss
+
+trigger: none
+pr: none
 
 pool:
   name: Default
-
-
 
 
 variables:
   - group: mlops-azure-components
 
 stages:
+
+# ---------------------- Infrastructure Validation ----------------------
+
+- stage: ValidateInfrastructure
+  displayName: 'Check Infrastructure is Ready'
+  jobs:
+    - job: CheckPrerequisites
+      displayName: 'Verify Azure Resources Exist'
+      steps:
+        - task: AzureCLI@2
+          displayName: "Verify Workspace and Compute"
+          inputs:
+            azureSubscription: mlops_anomaly_detection
+            scriptType: ps
+            scriptLocation: inlineScript
+            inlineScript: |
+              # Check if workspace exists
+              az ml workspace show --name $(WORKSPACE) --resource-group $(RESOURCE_GROUP)
+              
+              # Check if compute exists
+              az ml compute show --name $(COMPUTE_NAME) --workspace-name $(WORKSPACE) --resource-group $(RESOURCE_GROUP)
+              
+              Write-Host "✓ All required infrastructure is ready"
 
 # ---------------------- Setup ----------------------
 
@@ -27,6 +49,7 @@ stages:
   jobs:
     - job: SetupJob
       displayName: 'Checkout, Setup Python, Install Dependencies'
+      dependsOn: ValidateInfrastructure
       steps:
         - checkout: self
           submodules: true
