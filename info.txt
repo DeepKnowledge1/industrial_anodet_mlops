@@ -1,0 +1,3 @@
+  "azure-cli": "2.74.0",
+
+   azure-cli version: 2.82.0

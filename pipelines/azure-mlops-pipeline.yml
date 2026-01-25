@@ -1,3 +1,46 @@
+# ============================================================================
+# Azure MLOps Pipeline - Optimized Structure
+# ============================================================================
+#
+# This pipeline orchestrates the complete ML lifecycle from validation to deployment.
+# It supports two deployment paths: AKS (containerized) or Azure ML Managed Endpoints.
+#
+# Pipeline Stages (7 total):
+#
+# 1. BuildAndTest
+#    - Validates Azure infrastructure (workspace, compute, ...)
+#    - Checks out code and updates submodules
+#    - Sets up Python 3.11 and installs dependencies
+#    - Runs unit tests
+#
+# 2. DataAndTraining
+#    - Validates input data quality and schema
+#    - Trains the ML model on validated data
+#
+# 3. ModelManagement
+#    - Registers trained model to Azure ML registry
+#    - Downloads model artifacts for deployment
+#
+# 4. ContainerBuildAndPublish (AKS path only)
+#    - Builds Docker image with FastAPI + NumPy
+#    - Authenticates to Azure Container Registry
+#    - Tags and pushes image to ACR
+#
+# 5. AksDeployment (AKS path only)
+#    - Assigns ACR pull role to ML workspace identity
+#    - Attaches ACR to AKS cluster
+#    - Deploys containerized model to AKS
+#
+# 6. ManagedEndpointDeployment (Managed Endpoint path only)
+#    - Creates Azure ML inference endpoint
+#    - Deploys model to the endpoint
+#
+# 7. PostDeploymentValidation (Managed Endpoint path only)
+#    - Runs post-deployment tests
+#    - Manual approval gate before production
+#
+# ============================================================================
+
 # when starting the pipeline in the Azure DevOps UI, you'll be asked to check/uncheck "Deploy ACR to AKS?".
 parameters:
   - name: deployAcrToAks
@@ -5,28 +48,27 @@ parameters:
     type: boolean
     default: false
 
-
-
 trigger: none
 pr: none
 
 pool:
   name: Default
 
-
 variables:
   - group: mlops-azure-components
 
 stages:
 
-# ---------------------- Infrastructure Validation ----------------------
+# ---------------------- Build & Test ----------------------
 
-- stage: ValidateInfrastructure
-  displayName: 'Check Infrastructure is Ready'
+- stage: BuildAndTest
+  displayName: 'Build & Test'
   jobs:
-    - job: CheckPrerequisites
-      displayName: 'Verify Azure Resources Exist'
+    - job: ValidateInfrastructure
+      displayName: 'Verify Azure Resources'
       steps:
+        - checkout: none
+
         - task: AzureCLI@2
           displayName: "Verify Workspace and Compute"
           inputs:
@@ -36,19 +78,14 @@ stages:
             inlineScript: |
               # Check if workspace exists
               az ml workspace show --name $(WORKSPACE) --resource-group $(RESOURCE_GROUP)
-              
+
               # Check if compute exists
               az ml compute show --name $(COMPUTE_NAME) --workspace-name $(WORKSPACE) --resource-group $(RESOURCE_GROUP)
-              
+
               Write-Host "✓ All required infrastructure is ready"
 
-# ---------------------- Setup ----------------------
-
-- stage: SetupStage
-  displayName: 'Setup and Preparation'
-  jobs:
-    - job: SetupJob
-      displayName: 'Checkout, Setup Python, Install Dependencies'
+    - job: SetupAndTest
+      displayName: 'Setup, Dependencies & Unit Tests'
       dependsOn: ValidateInfrastructure
       steps:
         - checkout: self
@@ -59,141 +96,110 @@ stages:
         - template: templates/update_submodules.yml
         - template: templates/use_python_3_11_0.yml
         - template: templates/install_dependencies.yml
-
-# ---------------------- Testing ----------------------
-
-- stage: RunTests
-  displayName: 'Run Unit Tests'
-  dependsOn: SetupStage
-  jobs:
-    - job: RunTestsJob
-      steps:
         - template: templates/unit_test.yml
 
-# ---------------------- Data Validation ----------------------
+# ---------------------- Data Validation & Training ----------------------
 
-- stage: DataValidation
-  displayName: 'Data Validation'
-  dependsOn: RunTests
+- stage: DataAndTraining
+  displayName: 'Data Validation & Model Training'
+  dependsOn: BuildAndTest
   jobs:
-    - template: templates/data_validation.yml
+    - job: ValidateData
+      displayName: 'Validate Data'
+      steps:
+        - checkout: none
 
-# ---------------------- Training ----------------------
+        - template: templates/data_validation.yml
 
-- stage: TrainModel
-  displayName: 'Training Process'
-  dependsOn: DataValidation
+    - job: TrainModel
+      displayName: 'Train Model'
+      dependsOn: ValidateData
+      steps:
+        - checkout: none
+
+        - template: templates/training.yml
+
+# ---------------------- Model Management ----------------------
+
+- stage: ModelManagement
+  displayName: 'Register & Download Model'
+  dependsOn: DataAndTraining
   jobs:
-    - template: templates/training.yml
+    - job: RegisterAndDownload
+      displayName: 'Register & Download Model'
+      steps:
+        - checkout: none
 
-# ---------------------- Model Register ----------------------
+        - template: templates/register_model.yml
+        - template: templates/download_model.yml
 
-- stage: RegisterModel
-  displayName: 'Model Registering'
-  dependsOn: TrainModel
-  jobs:
-    - template: templates/register_model.yml
+# ---------------------- Container Build & Publish (AKS Path) ----------------------
 
-# ---------------------- Model Download (Optional) ----------------------
-
-- stage: DownloadModel
-  displayName: 'Download Registered Model'
-  dependsOn: RegisterModel
-  jobs:
-    - template: templates/download_model.yml
-
-# ---------------------- Docker Build ----------------------
-
-- stage: BuildDockerImage
-  displayName: 'Build Docker Image (FastAPI + NumPy)'
-  dependsOn: DownloadModel
+- stage: ContainerBuildAndPublish
+  displayName: 'Build & Push Container to ACR'
+  dependsOn: ModelManagement
   condition: and(succeeded(), eq(${{ parameters.deployAcrToAks }}, true))
   jobs:
-    - template: templates/docker_build_np.yml
+    - job: BuildPushContainer
+      displayName: 'Build, Tag & Push Docker Image'
+      steps:
+        - checkout: none
 
-# ---------------------- ACR Login ----------------------
+        - template: templates/docker_build_np.yml
+        - template: templates/acr_admin_login.yml
+        - template: templates/docker_tag_and_push.yml
 
-- stage: AcrAdminLogin
-  displayName: 'Login to ACR Using Admin Credentials'
-  dependsOn: BuildDockerImage
+# ---------------------- AKS Configuration & Deployment ----------------------
+
+- stage: AksDeployment
+  displayName: 'Configure & Deploy to AKS'
+  dependsOn: ContainerBuildAndPublish
   condition: and(succeeded(), eq(${{ parameters.deployAcrToAks }}, true))
   jobs:
-    - template: templates/acr_admin_login.yml
+    - job: ConfigureAndDeploy
+      displayName: 'Setup ACR Access & Deploy to AKS'
+      steps:
+        - checkout: none
 
-# ---------------------- Docker Push ----------------------
+        - template: templates/assign_acr_pull_role.yml
+        - template: templates/attach_acr_to_aks.yml
+        - template: templates/deploy_acr_to_aks.yml
 
-- stage: DockerTagAndPush
-  displayName: 'Tag and Push Docker Image to ACR'
-  dependsOn: AcrAdminLogin
-  condition: and(succeeded(), eq(${{ parameters.deployAcrToAks }}, true))
-  jobs:
-    - template: templates/docker_tag_and_push.yml
+# ---------------------- Managed Endpoint Deployment ----------------------
 
-# ---------------------- Assign ACR Role ----------------------
-
-- stage: AssignAcrPullRole
-  displayName: 'Assign ACR Pull Role to ML Workspace Identity'
-  dependsOn: DockerTagAndPush
-  condition: and(succeeded(), eq(${{ parameters.deployAcrToAks }}, true))
-  jobs:
-    - template: templates/assign_acr_pull_role.yml
-
-# ---------------------- Attach ACR to AKS ----------------------
-
-- stage: AttachAcrToAks
-  displayName: 'Attach ACR to AKS Cluster'
-  dependsOn: AssignAcrPullRole
-  condition: and(succeeded(), eq(${{ parameters.deployAcrToAks }}, true))
-  jobs:
-    - template: templates/attach_acr_to_aks.yml
-
-# ---------------------- Deploy to AKS ----------------------
-
-- stage: DeployAcrToAks
-  displayName: 'Deploy Docker Image to AKS'
-  dependsOn: AttachAcrToAks
-  condition: and(succeeded(), eq(${{ parameters.deployAcrToAks }}, true))
-  jobs:
-    - template: templates/deploy_acr_to_aks.yml
-
-# ---------------------- Create Endpoint ----------------------
-
-- stage: CreateEndpoint
-  displayName: 'Create Inference Endpoint'
-  dependsOn: DownloadModel
+- stage: ManagedEndpointDeployment
+  displayName: 'Deploy to Managed Endpoint'
+  dependsOn: ModelManagement
   condition: and(succeeded(), eq(${{ parameters.deployAcrToAks }}, false))
   jobs:
-    - template: templates/create_endpoint.yml
+    - job: CreateAndDeployEndpoint
+      displayName: 'Create Endpoint & Deploy Model'
+      steps:
+        - checkout: none
 
-# ---------------------- Deploy Endpoint ----------------------
+        - template: templates/create_endpoint.yml
+        - template: templates/create_deployment.yml
 
-- stage: DeployEndpoint
-  displayName: 'Deploy Model to Endpoint'
-  dependsOn: CreateEndpoint
+# ---------------------- Post-Deployment Validation ----------------------
+
+- stage: PostDeploymentValidation
+  displayName: 'Post-Deployment Tests & Approval'
+  dependsOn: ManagedEndpointDeployment
   condition: and(succeeded(), eq(${{ parameters.deployAcrToAks }}, false))
   jobs:
-    - template: templates/create_deployment.yml
+    - job: RunPostDeploymentTests
+      displayName: 'Run Post-Deployment Tests'
+      steps:
+        - checkout: none
 
-# ---------------------- Post-Deployment Tests ----------------------
-  
-- stage: PostDeploymentTests
-  displayName: 'Run Post-Deployment Unit Tests'
-  dependsOn: DeployEndpoint
-  condition: and(succeeded(), eq(${{ parameters.deployAcrToAks }}, false))
-  jobs:
-    - template: templates/post_deployment_tests.yml
+        - template: templates/post_deployment_tests.yml
 
-# ---------------------- Approval ----------------------
-
-- stage: ApproveDeployment
-  displayName: 'Manual Approval Before Production Deployment'
-  dependsOn: PostDeploymentTests
-  condition: and(succeeded(), eq(${{ parameters.deployAcrToAks }}, false))
-  jobs:
     - job: ManualApproval
-      pool: server  # This is the key - agentless job
+      displayName: 'Approve Production Deployment'
+      dependsOn: RunPostDeploymentTests
+      pool: server
       steps:
         - task: ManualValidation@0
           inputs:
-            instructions: 'Approve production deployment.'
+            instructions: 'Review test results and approve production deployment.'
             onTimeout: 'reject'
