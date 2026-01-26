@@ -1,4 +1,5 @@
 import json
+import sys
 import numpy as np
 import os
 import onnxruntime as ort
@@ -12,7 +13,11 @@ import logging
 import time
 from datetime import datetime
 
+sys.path.append(os.path.join(os.path.dirname(__file__), "AnomaVision"))
+
+
 import static.AnomaVision as anodet
+from utils import extract_drift_features
 
 import pandas as pd
 from azureml.ai.monitoring import Collector
@@ -196,9 +201,7 @@ def numpy_to_base64(image_array: np.ndarray, resize_to: tuple[int, int] = None) 
         return ""
 
 def run(raw_data):
-    """
-    This function is called for every incoming request.
-    """
+    """This function is called for every incoming request."""
     total_start_time = time.time()
     error_occurred = False
     error_message = ""
@@ -212,68 +215,91 @@ def run(raw_data):
             logger.warning("No image_base64 provided in the request.")
             return json.dumps({"error": "No image_base64 provided"})
 
-        # Preprocessing time
+        # Preprocessing
         preprocess_start_time = time.time()
         image_bytes = base64.b64decode(image_base64)
         image_np = preprocess_image_from_bytes_CV(image_bytes)
-        preprocess_end_time = time.time()
-        preprocess_time = (preprocess_end_time - preprocess_start_time) * 1000
+        preprocess_time = (time.time() - preprocess_start_time) * 1000
 
-        # Image Analysis Metrics (for monitoring)
+        # Image metrics
         img_height, img_width, img_channels = image_np.shape
         img_pixel_mean = float(np.mean(image_np))
         img_pixel_std = float(np.std(image_np))
-        img_pixel_min = float(np.min(image_np))
-        img_pixel_max = float(np.max(image_np))
-        img_total_pixels = int(image_np.size)
-
-        logger.info(f"Image Analysis Metrics: Dimensions: ({img_height}, {img_width}, {img_channels}), "
-                   f"Pixel Stats (Mean/Std/Min/Max): {img_pixel_mean:.2f}/{img_pixel_std:.2f}/"
-                   f"{img_pixel_min:.2f}/{img_pixel_max:.2f}, Total Pixels: {img_total_pixels}")
 
         if sess is None:
             logger.error("Model not loaded. Cannot perform inference.")
             return json.dumps({"error": "Model not loaded."})
 
-        # Inference time
+        # Inference
         inference_start_time = time.time()
         batch = anodet.to_batch([image_np])
-        input_numpy = batch
-
         input_name = sess.get_inputs()[0].name
         output_names = [output.name for output in sess.get_outputs()]
 
-        if len(output_names) < 2:
-            logger.error("Model must have at least 2 outputs for anomaly detection.")
-            return json.dumps({"error": "Model must have at least 2 outputs"})
-
-        outputs = sess.run(output_names, {input_name: input_numpy})
-
+        outputs = sess.run(output_names, {input_name: batch})
         image_scores = np.array([outputs[0]])
         score_maps = np.array(outputs[1])
-        inference_end_time = time.time()
-        inference_time = (inference_end_time - inference_start_time) * 1000
+        inference_time = (time.time() - inference_start_time) * 1000
 
         anomaly_score = float(image_scores[0])
         is_anomaly = bool(anomaly_score >= ANOMALY_THRESHOLD)
 
+        # Visualizations
         boundary_image_base64 = ""
         heatmap_image_base64 = ""
-
         visualization_time = 0
+
         if include_visualizations:
             visualization_start_time = time.time()
             boundary_image, heatmap_image, _ = create_visualizations(
                 image_np, score_maps, image_scores
             )
-
             if boundary_image is not None:
                 boundary_image_base64 = numpy_to_base64(boundary_image, RESIZE_SIZE)
             if heatmap_image is not None:
                 heatmap_image_base64 = numpy_to_base64(heatmap_image, RESIZE_SIZE)
+            visualization_time = (time.time() - visualization_start_time) * 1000
 
-            visualization_end_time = time.time()
-            visualization_time = (visualization_end_time - visualization_start_time) * 1000
+        # Calculate total latency BEFORE using it
+        total_latency = (time.time() - total_start_time) * 1000
+
+        # ============================================================================
+        # DRIFT FEATURE COLLECTION (FIXED)
+        # ============================================================================
+        if collector is not None:
+            try:
+                # Extract single score map (remove batch dimension if needed)
+                single_score_map = score_maps[0] if len(score_maps.shape) > 2 else score_maps
+
+                # Create drift features DataFrame for single image
+                df_single = extract_drift_features(
+                    data=image_np,  # Single image (H, W, C)
+                    scores=anomaly_score,  # Single score
+                    maps=single_score_map,  # Single score map (H, W)
+                    include_metadata=True
+                )
+
+                # Add metadata and prediction info
+                df_single['is_anomaly'] = int(is_anomaly)
+                df_single['latency_ms'] = float(total_latency)
+                df_single['threshold'] = float(ANOMALY_THRESHOLD)
+                df_single['timestamp'] = datetime.now().isoformat()
+
+                # Image statistics for additional drift monitoring
+                df_single['image_height'] = img_height
+                df_single['image_width'] = img_width
+                df_single['image_pixel_mean'] = img_pixel_mean
+                df_single['image_pixel_std'] = img_pixel_std
+
+                # Collect to Azure ML Data Collector
+                collector.collect(df_single)
+                logger.debug(f"Drift features collected: {df_single.shape[1]} features")
+
+            except Exception as e:
+                logger.warning(f"Failed to collect drift features: {e}")
+                import traceback
+                traceback.print_exc()
+        # ============================================================================
 
         result = {
             "anomaly_score": anomaly_score,
@@ -282,25 +308,17 @@ def run(raw_data):
             "heatmap_image_base64": heatmap_image_base64,
         }
 
-        total_end_time = time.time()
-        total_latency = (total_end_time - total_start_time) * 1000
+        # Performance logging
+        logger.info(f"Performance: Total={total_latency:.2f}ms, "
+                   f"Preprocess={preprocess_time:.2f}ms, "
+                   f"Inference={inference_time:.2f}ms, "
+                   f"Viz={visualization_time:.2f}ms")
 
-        # Log performance metrics
-        logger.info(f"Performance Metrics: Total Latency: {total_latency:.2f}ms, "
-                   f"Preprocessing: {preprocess_time:.2f}ms, Inference: {inference_time:.2f}ms, "
-                   f"Visualization: {visualization_time:.2f}ms")
+        # Anomaly logging
+        logger.info(f"Anomaly: score={anomaly_score:.4f}, "
+                   f"is_anomaly={is_anomaly}, threshold={ANOMALY_THRESHOLD}")
 
-        # Log Anomaly Detection Metrics
-        score_map_min = float(np.min(score_maps))
-        score_map_max = float(np.max(score_maps))
-        score_map_mean = float(np.mean(score_maps))
-        score_map_std = float(np.std(score_maps))
-
-        logger.info(f"Anomaly Detection Metrics: Score: {anomaly_score:.4f}, Is Anomaly: {is_anomaly}, "
-                   f"Threshold: {ANOMALY_THRESHOLD}, Score Map Stats (Min/Max/Mean/Std): "
-                   f"{score_map_min:.4f}/{score_map_max:.4f}/{score_map_mean:.4f}/{score_map_std:.4f}")
-
-        # === MONITORING: Log inference data ===
+        # Optional: Log to JSON file for backup
         if MONITORING_ENABLED:
             monitoring_data = {
                 "timestamp": datetime.now().isoformat(),
@@ -308,54 +326,14 @@ def run(raw_data):
                 "is_anomaly": is_anomaly,
                 "threshold": ANOMALY_THRESHOLD,
                 "latency_ms": total_latency,
-                "preprocessing_ms": preprocess_time,
-                "inference_ms": inference_time,
-                "visualization_ms": visualization_time,
-                "error": error_occurred,
-                # Image statistics for drift detection
                 "image_stats": {
                     "height": img_height,
                     "width": img_width,
-                    "channels": img_channels,
                     "pixel_mean": img_pixel_mean,
-                    "pixel_std": img_pixel_std,
-                    "pixel_min": img_pixel_min,
-                    "pixel_max": img_pixel_max
-                },
-                # Score map statistics
-                "score_map_stats": {
-                    "min": score_map_min,
-                    "max": score_map_max,
-                    "mean": score_map_mean,
-                    "std": score_map_std
+                    "pixel_std": img_pixel_std
                 }
             }
             log_inference_data(monitoring_data)
-
-        # ---- Drift logging (tabular) ----
-        if collector is not None:
-            row = {
-                "timestamp": datetime.now().isoformat(),
-                "anomaly_score": anomaly_score,
-                "is_anomaly": int(is_anomaly),
-                "latency_ms": float(total_latency),
-                "img_height": int(img_height),
-                "img_width": int(img_width),
-                "img_channels": int(img_channels),
-                "pixel_mean": float(img_pixel_mean),
-                "pixel_std": float(img_pixel_std),
-                "pixel_min": float(img_pixel_min),
-                "pixel_max": float(img_pixel_max),
-                "score_map_min": float(score_map_min),
-                "score_map_max": float(score_map_max),
-                "score_map_mean": float(score_map_mean),
-                "score_map_std": float(score_map_std),
-            }
-            try:
-                df = pd.DataFrame([row])
-                collector.collect(df)
-            except Exception as e:
-                logger.warning(f"Collector.collect failed: {e}")
 
         return json.dumps(result)
 
@@ -366,11 +344,8 @@ def run(raw_data):
         import traceback
         traceback.print_exc()
 
-        # Log error to monitoring
         if MONITORING_ENABLED:
-            total_end_time = time.time()
-            total_latency = (total_end_time - total_start_time) * 1000
-
+            total_latency = (time.time() - total_start_time) * 1000
             error_log = {
                 "timestamp": datetime.now().isoformat(),
                 "error": True,
@@ -380,7 +355,6 @@ def run(raw_data):
             log_inference_data(error_log)
 
         return json.dumps({"error": error_message})
-
 
 
 # # -------------------------------------------------------------------------------------------------------

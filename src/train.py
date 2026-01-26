@@ -1,4 +1,5 @@
 import sys, os
+import pandas as pd
 sys.path.append(os.path.join(os.path.dirname(__file__), "AnomaVision"))
 import AnomaVision.anomavision as AnomaVision
 
@@ -15,6 +16,7 @@ import json
 from sklearn.metrics import roc_auc_score, precision_recall_curve, auc
 from easydict import EasyDict as edict
 
+from utils import extract_drift_features
 from AnomaVision.anomavision.utils import get_logger, setup_logging
 from AnomaVision.anomavision.config import load_config
 from AnomaVision.anomavision.utils import merge_config, save_args_to_yaml
@@ -55,12 +57,16 @@ def parse_args():
     # MLflow
     parser.add_argument('--mlflow_tracking_uri', type=str, default='file:./mlruns')
     parser.add_argument('--mlflow_experiment_name', type=str, default='padim_anomaly_detection')
-    parser.add_argument('--run_name', type=str, default=None, help='MLflow run name (auto-generated if not provided)')
+    parser.add_argument('--run_name', type=str, default='anomaV', help='MLflow run name (auto-generated if not provided)')
     parser.add_argument('--registered_model_name', type=str, default='PadimONNX')
 
     # Evaluation
     parser.add_argument('--evaluate_model', action='store_true', default=False, help='Evaluate after training')
     parser.add_argument('--threshold', type=float, default=13.0, help='Anomaly detection threshold')
+
+    # Drift monitoring
+    parser.add_argument('--generate_baseline', action='store_true', default=True, help='Generate baseline reference data for drift monitoring')
+    parser.add_argument('--baseline_output_path', type=str, default='outputs/baseline_reference.csv', help='Path to save baseline reference dataset')
 
     # Logging
     parser.add_argument('--log_level', type=str, choices=['DEBUG', 'INFO', 'WARNING', 'ERROR'], default='INFO', help='Logging level')
@@ -68,21 +74,32 @@ def parse_args():
     return parser, parser.parse_args()
 
 def evaluate_model(model, test_dataloader, device, threshold):
-    """Evaluate trained model and return metrics."""
-    logger.info("Starting evaluation...")
+    """
+    Evaluate trained model and return metrics.
+
+    This function ONLY calculates evaluation metrics (AUC, accuracy, etc.)
+    """
+    logger.info("Starting model evaluation...")
     model.eval()
     all_scores, all_labels = [], []
 
     with torch.no_grad():
-        for batch, labels, _ in test_dataloader:
-            image_scores, _ = model.predict(batch.to(device))
-            all_scores.extend(image_scores.cpu().numpy())
-            all_labels.extend(labels.numpy())
+        for batch, _, image_classification, _ in test_dataloader:
+            # Move batch to device and run inference
+            batch_device = batch.to(device)
+            image_scores, score_maps = model.predict(batch_device)
 
+            # Convert to numpy for metric calculation
+            image_scores_np = image_scores.cpu().numpy()
+
+            # Collect predictions and ground truth
+            all_scores.extend(image_scores_np)
+            all_labels.extend(image_classification.numpy())
+
+    # Calculate evaluation metrics
     all_scores = np.array(all_scores)
     all_labels = np.array(all_labels)
 
-    # Calculate metrics with error handling
     metrics = {'threshold': threshold}
 
     try:
@@ -105,6 +122,87 @@ def evaluate_model(model, test_dataloader, device, threshold):
 
     logger.info(f"Evaluation metrics: {metrics}")
     return metrics
+
+
+def generate_baseline_reference(model, dataloader, device, output_path, threshold, dataset_type="test"):
+    """
+    Generate baseline reference dataset for drift monitoring.
+
+    This function is specifically for creating the reference dataset
+    that will be used to compare against production data.
+
+    Args:
+        model: Trained PaDiM model
+        dataloader: DataLoader with data to use as baseline
+        device: torch device
+        output_path: Path to save baseline CSV
+        threshold: Anomaly detection threshold
+        dataset_type: 'train' or 'test' - what type of data this is
+
+    Returns:
+        DataFrame with baseline reference data
+    """
+    logger.info(f"Generating baseline reference dataset from {dataset_type} data...")
+    model.eval()
+    all_drift_dfs = []
+
+    with torch.no_grad():
+        for batch_idx, (batch, _, image_classification, _) in enumerate(dataloader):
+            # Move batch to device and run inference
+            batch_device = batch.to(device)
+            image_scores, score_maps = model.predict(batch_device)
+
+            # Convert to numpy for drift feature extraction
+            batch_np = batch.cpu().numpy()  # Shape: (B, C, H, W) or (B, H, W, C)
+            image_scores_np = image_scores.cpu().numpy()  # Shape: (B,)
+            score_maps_np = score_maps.cpu().numpy()  # Shape: (B, H, W)
+
+            try:
+                # Extract drift features for entire batch
+                batch_df = extract_drift_features(
+                    data=batch_np,
+                    scores=image_scores_np,
+                    maps=score_maps_np,
+                    include_metadata=True
+                )
+
+                # Add ground truth labels and metadata
+                batch_df['is_anomaly'] = image_classification.numpy().astype(int)
+                batch_df['threshold'] = threshold
+                batch_df['dataset_type'] = dataset_type
+                batch_df['batch_idx'] = batch_idx
+
+                all_drift_dfs.append(batch_df)
+
+                if (batch_idx + 1) % 10 == 0:
+                    logger.debug(f"Processed {batch_idx + 1} batches for baseline reference")
+
+            except Exception as e:
+                logger.warning(f"Failed to extract drift features for batch {batch_idx}: {e}")
+                import traceback
+                traceback.print_exc()
+
+    # Concatenate all batches
+    if not all_drift_dfs:
+        logger.error("No drift features collected. Cannot generate baseline reference.")
+        return None
+
+    df_reference = pd.concat(all_drift_dfs, ignore_index=True)
+
+    # Add summary statistics
+    logger.info(f"Baseline reference dataset generated:")
+    logger.info(f"  Total samples: {len(df_reference)}")
+    logger.info(f"  Normal samples: {(df_reference['is_anomaly'] == 0).sum()}")
+    logger.info(f"  Anomaly samples: {(df_reference['is_anomaly'] == 1).sum()}")
+    logger.info(f"  Mean anomaly score: {df_reference['anomaly_score'].mean():.4f}")
+    logger.info(f"  Std anomaly score: {df_reference['anomaly_score'].std():.4f}")
+
+    # Save to CSV
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    df_reference.to_csv(output_path, index=False)
+    logger.info(f"Baseline reference saved to: {output_path}")
+
+    return df_reference
 
 
 def log_environment(device):
@@ -143,7 +241,6 @@ def main():
 
     # Load config file
     if os.path.isfile(args.config):
-        logger.error(f"Config file not found: {args.config}")
         cfg = load_config(args.config)
     else:
         cfg = {}
@@ -172,7 +269,7 @@ def main():
     mlflow.set_tracking_uri(config.mlflow_tracking_uri)
     mlflow.set_experiment(config.mlflow_experiment_name)
 
-    run_name = f"padim_{config.backbone}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    run_name = config.run_name or f"padim_{config.backbone}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
     # Load datasets
     train_dataset = AnomaVision.AnodetDataset(os.path.join(DATASET_PATH, "train/good"))
@@ -180,7 +277,7 @@ def main():
     logger.info(f"Training images: {len(train_dataset)}")
 
     test_dataloader = None
-    if config.evaluate_model:
+    if config.evaluate_model or config.generate_baseline:
         try:
             test_path = os.path.dirname(DATASET_PATH)
             class_name = os.path.basename(DATASET_PATH)
@@ -190,6 +287,7 @@ def main():
         except Exception as e:
             logger.warning(f"Could not load test dataset: {e}")
             config.evaluate_model = False
+            config.generate_baseline = False
 
     # Start MLflow run
     with mlflow.start_run(run_name=run_name) as run:
@@ -203,11 +301,17 @@ def main():
                 "dataset_path": config.dataset_path,
                 "num_training_images": len(train_dataset),
                 "input_shape": f"[1, {config.input_channels}, {config.input_height}, {config.input_width}]",
+                "generate_baseline": config.generate_baseline,
             })
             log_environment(device)
 
-            # Initialize and train model
-            logger.info("Training PaDiM model...")
+            # ====================================================================
+            # STEP 1: TRAIN MODEL
+            # ====================================================================
+            logger.info("=" * 80)
+            logger.info("STEP 1: Training PaDiM model...")
+            logger.info("=" * 80)
+
             padim = AnomaVision.Padim(
                 backbone=config.backbone,
                 device=device,
@@ -224,8 +328,15 @@ def main():
             # Save PyTorch model
             pytorch_model_path = os.path.join(MODEL_DATA_PATH, config.output_model)
             torch.save(padim, pytorch_model_path)
+            logger.info(f"PyTorch model saved to: {pytorch_model_path}")
 
-            # Export to ONNX
+            # ====================================================================
+            # STEP 2: EXPORT TO ONNX
+            # ====================================================================
+            logger.info("=" * 80)
+            logger.info("STEP 2: Exporting to ONNX...")
+            logger.info("=" * 80)
+
             onnx_model_path = export_to_onnx(pytorch_model_path, MODEL_DATA_PATH, config, logger)
 
             # Log ONNX model to MLflow
@@ -251,12 +362,55 @@ def main():
                 signature=signature
             )
 
-            # Evaluate if requested
+            # ====================================================================
+            # STEP 3: EVALUATE MODEL (Optional)
+            # ====================================================================
             if config.evaluate_model and test_dataloader:
+                logger.info("=" * 80)
+                logger.info("STEP 3: Evaluating model performance...")
+                logger.info("=" * 80)
+
                 metrics = evaluate_model(padim, test_dataloader, device, config.threshold)
                 mlflow.log_metrics(metrics)
 
-            # Save and log metadata
+            # ====================================================================
+            # STEP 4: GENERATE BASELINE REFERENCE (Separate from evaluation)
+            # ====================================================================
+            if config.generate_baseline and train_dataloader:
+                logger.info("=" * 80)
+                logger.info("STEP 4: Generating baseline reference for drift monitoring...")
+                logger.info("=" * 80)
+
+                baseline_df = generate_baseline_reference(
+                    model=padim,
+                    dataloader=train_dataloader,
+                    device=device,
+                    output_path=config.baseline_output_path,
+                    threshold=config.threshold,
+                    dataset_type="test"
+                )
+
+                if baseline_df is not None:
+                    # Log baseline statistics to MLflow
+                    mlflow.log_metrics({
+                        "baseline_samples": len(baseline_df),
+                        "baseline_normal_samples": int((baseline_df['is_anomaly'] == 0).sum()),
+                        "baseline_anomaly_samples": int((baseline_df['is_anomaly'] == 1).sum()),
+                        "baseline_mean_score": float(baseline_df['anomaly_score'].mean()),
+                        "baseline_std_score": float(baseline_df['anomaly_score'].std()),
+                    })
+
+                    # Upload baseline to MLflow
+                    mlflow.log_artifact(config.baseline_output_path, "baseline")
+                    logger.info(f"✓ Baseline reference uploaded to MLflow")
+
+            # ====================================================================
+            # STEP 5: SAVE METADATA
+            # ====================================================================
+            logger.info("=" * 80)
+            logger.info("STEP 5: Saving model metadata...")
+            logger.info("=" * 80)
+
             model_info = {
                 "model_type": "PaDiM",
                 "backbone": config.backbone,
@@ -264,7 +418,9 @@ def main():
                 "framework": "PyTorch",
                 "export_format": "ONNX",
                 "training_time_seconds": training_time,
-                "created_at": datetime.now().isoformat()
+                "threshold": config.threshold,
+                "created_at": datetime.now().isoformat(),
+                "baseline_generated": config.generate_baseline,
             }
 
             model_info_path = os.path.join(MODEL_DATA_PATH, "model_info.json")
@@ -278,12 +434,24 @@ def main():
             save_args_to_yaml(config, os.path.join(MODEL_DATA_PATH, "config.yml"))
             mlflow.log_artifact(os.path.join(MODEL_DATA_PATH, "config.yml"), "metadata")
 
-            logger.info(f"✓ Training completed successfully!")
+            # ====================================================================
+            # SUMMARY
+            # ====================================================================
+            logger.info("=" * 80)
+            logger.info("✓ Training pipeline completed successfully!")
+            logger.info("=" * 80)
             logger.info(f"MLflow run ID: {run.info.run_id}")
+            logger.info(f"PyTorch model: {pytorch_model_path}")
+            logger.info(f"ONNX model: {onnx_model_path}")
+            if config.generate_baseline:
+                logger.info(f"Baseline reference: {config.baseline_output_path}")
+            logger.info("=" * 80)
 
         except Exception as e:
             mlflow.log_param("training_status", "failed")
             logger.error(f"Training failed: {e}")
+            import traceback
+            traceback.print_exc()
             raise
 
 

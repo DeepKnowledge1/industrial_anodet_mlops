@@ -13,7 +13,8 @@ command: >
   --test_dataset_path ${{inputs.test_dataset_path}}
   --output_model ${{outputs.model_output}}
   --evaluate_model
-
+  --generate_baseline
+  --baseline_output_path ${{outputs.baseline_reference}}
 
 environment: azureml:anomavision_env:1
 
@@ -33,7 +34,11 @@ outputs:
   model_output:
     type: uri_folder
     mode: rw_mount
-    # path: azureml://datastores/workspaceblobstore/paths/models/anomavision/    
+    # path: azureml://datastores/workspaceblobstore/paths/models/anomavision/
+
+  baseline_reference:
+    type: uri_file
+    mode: upload
 
 compute: azureml:compute-anomavision  # ← from COMPUTE_NAME
 
