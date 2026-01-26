@@ -29,7 +29,6 @@ steps:
           --cov-report=html `
           --score_uri $score_uri `
           --score_key $score_key
-    workingDirectory: '$(System.DefaultWorkingDirectory)'
 
   - task: PublishTestResults@2
     displayName: 'Publish Test Results'
