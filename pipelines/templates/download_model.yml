@@ -1,3 +1,5 @@
+parameters: {}
+
 steps:
   - task: AzureCLI@2
     displayName: "Download Model via Azure CLI"
@@ -6,7 +8,6 @@ steps:
       scriptType: ps
       scriptLocation: inlineScript
       inlineScript: |
-
         az ml model download `
           --name "anomavision_model" `
           --version 1 `

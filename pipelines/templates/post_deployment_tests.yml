@@ -1,4 +1,5 @@
 parameters: {}
+
 steps:
   - task: AzureCLI@2
     displayName: "Run pytest with dynamic score_uri and score_key"
@@ -28,12 +29,10 @@ steps:
           --cov-report=html `
           --score_uri $score_uri `
           --score_key $score_key
-      workingDirectory: '$(System.DefaultWorkingDirectory)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)'
 
-  # Publish test results
   - task: PublishTestResults@2
     displayName: 'Publish Test Results'
     inputs:
       testResultsFiles: '**/pro-test-results.xml'
     condition: succeededOrFailed()
-    

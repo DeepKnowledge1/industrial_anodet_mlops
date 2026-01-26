@@ -1,3 +1,5 @@
+parameters: {}
+
 steps:
   - task: AzureCLI@2
     displayName: "Register the Model"

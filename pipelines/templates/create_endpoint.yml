@@ -10,7 +10,6 @@ steps:
       inlineScript: |
         Write-Output "Creating Azure ML Online Endpoint..."
 
-        # Create the endpoint using the existing endpoint-config.yml file
         az ml online-endpoint create `
           --file ./deployment/endpoint-config.yml `
           --resource-group $(RESOURCE_GROUP) `

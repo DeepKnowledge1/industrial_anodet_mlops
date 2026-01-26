@@ -1,4 +1,5 @@
 parameters: {}
+
 steps:
   - task: AzureCLI@2
     displayName: "Attach ACR to AKS"
@@ -48,6 +49,5 @@ steps:
 
         Write-Output "AKS credentials configured successfully!"
 
-        # Verify kubectl connection
         kubectl cluster-info
         kubectl get nodes
