@@ -1,48 +1,44 @@
-jobs:
-- job: RunAzureMLJob
-  displayName: "Run Azure ML Training Job"
-  steps:
-    # - checkout: self   # IMPORTANT: you currently use checkout: none in the stage
+steps:
+  # - checkout: self   # IMPORTANT: you currently use checkout: none in the stage
+  - task: AzureCLI@2
+    displayName: "Create + Stream Azure ML Job, then Register Baseline"
+    inputs:
+      azureSubscription: mlops_anomaly_detection
+      scriptType: ps
+      scriptLocation: inlineScript
+      inlineScript: |
+        # 1) Create job (no stream) and capture name
+        $jobName = az ml job create `
+          --file "./jobs/training-job.yml" `
+          --resource-group $(RESOURCE_GROUP) `
+          --workspace-name $(WORKSPACE) `
+          --query name -o tsv
 
-    - task: AzureCLI@2
-      displayName: "Create + Stream Azure ML Job, then Register Baseline"
-      inputs:
-        azureSubscription: mlops_anomaly_detection
-        scriptType: ps
-        scriptLocation: inlineScript
-        inlineScript: |
-          # 1) Create job (no stream) and capture name
-          $jobName = az ml job create `
-            --file "./jobs/training-job.yml" `
-            --resource-group $(RESOURCE_GROUP) `
-            --workspace-name $(WORKSPACE) `
-            --query name -o tsv
+        Write-Host "Training job name: $jobName"
 
-          Write-Host "Training job name: $jobName"
+        # 2) Stream logs
+        az ml job stream `
+          --name $jobName `
+          --resource-group $(RESOURCE_GROUP) `
+          --workspace-name $(WORKSPACE)
 
-          # 2) Stream logs
-          az ml job stream `
-            --name $jobName `
-            --resource-group $(RESOURCE_GROUP) `
-            --workspace-name $(WORKSPACE)
+        # 3) Download baseline output locally
+        New-Item -ItemType Directory -Force -Path baseline_out | Out-Null
 
-          # 3) Download baseline output locally
-          New-Item -ItemType Directory -Force -Path baseline_out | Out-Null
+        az ml job download `
+          --name $jobName `
+          --resource-group $(RESOURCE_GROUP) `
+          --workspace-name $(WORKSPACE) `
+          --output-name baseline_reference `
+          --download-path baseline_out
 
-          az ml job download `
-            --name $jobName `
-            --resource-group $(RESOURCE_GROUP) `
-            --workspace-name $(WORKSPACE) `
-            --output-name baseline_reference `
-            --download-path baseline_out
+        # 4) Register baseline as Data Asset
+        az ml data create `
+          --name padim_drift_baseline `
+          --version $jobName `
+          --type uri_file `
+          --path baseline_out/baseline_reference `
+          --resource-group $(RESOURCE_GROUP) `
+          --workspace-name $(WORKSPACE)
 
-          # 4) Register baseline as Data Asset
-          az ml data create `
-            --name padim_drift_baseline `
-            --version $jobName `
-            --type uri_file `
-            --path baseline_out/baseline_reference `
-            --resource-group $(RESOURCE_GROUP) `
-            --workspace-name $(WORKSPACE)
-
-          Write-Host "✓ Registered baseline data asset: padim_drift_baseline:$jobName"
+        Write-Host "✓ Registered baseline data asset: padim_drift_baseline:$jobName"

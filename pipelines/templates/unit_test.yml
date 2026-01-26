@@ -1,5 +1,4 @@
 steps:
-
   # Set PYTHONPATH to include the src directory and run pytest
   - script: |
       echo "Running tests..."
