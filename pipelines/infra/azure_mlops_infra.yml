@@ -9,7 +9,6 @@ pool:
 variables:
   - group: mlops-azure-components
 
-
 stages:
   - stage: BootstrapAzureMLInfra
     displayName: Provision Azure ML Infrastructure
@@ -17,43 +16,45 @@ stages:
       - job: InstallAzureMLExtension
         displayName: "Install ML Extension"
         steps:
-          checkout: none
+          - checkout: none
           - template: templates/install_azureml_extension.yml
 
       - job: CreateResourceGroup
         displayName: "Create RG"
         dependsOn: InstallAzureMLExtension
         steps:
-          checkout: none        
+          - checkout: none
           - template: templates/create_resource_group.yml
 
       - job: CreateWorkspace
         displayName: "Create AML Workspace"
         dependsOn: CreateResourceGroup
         steps:
-          checkout: none    
+          - checkout: none
           - template: templates/create_workspace.yml
 
       - job: CreateComputeCluster
         displayName: "Setup Compute"
         dependsOn: CreateWorkspace
         steps:
-          checkout: none    
+          - checkout: none
           - template: templates/create_compute_cluster.yml
 
       - job: UploadDataset
         displayName: "Data Ingestion"
         dependsOn: CreateComputeCluster
         steps:
-          checkout: none    
+          - checkout: none
           - template: templates/upload_dataset.yml
 
       - job: RegisterEnvironment
         displayName: "Register ML Environment"
         dependsOn: UploadDataset
         steps:
-          checkout: none    
+          - checkout: none
           - template: templates/register_env.yml
+
+
 
   # Optional stage for ACR & Key Vault
   # - stage: SetupKeyVaultACR
